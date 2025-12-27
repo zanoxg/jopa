@@ -1,64 +1,60 @@
 #include <iostream>
 #include <vector>
+#include <cstdlib>
+#include <ctime>
 
-bool isLeapYear(int year) {
-    return (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
-}
-
-int daysBetween(int day1, int month1, int year1, int day2, int month2, int year2) {
-    struct tm a = {0};
-    struct tm b = {0};
+// Задание 1: Нахождение минимального и максимального элементов в массиве
+void findMinMax(const std::vector<int>& arr, int& minElem, int& maxElem) {
+    minElem = arr[0];
+    maxElem = arr[0];
     
-    a.tm_year = year1 - 1900;
-    a.tm_mon = month1 - 1;
-    a.tm_mday = day1;
-    
-    b.tm_year = year2 - 1900;
-    b.tm_mon = month2 - 1;
-    b.tm_mday = day2;
-    
-    time_t time_a = mktime(&a);
-    time_t time_b = mktime(&b);
-    
-    return difftime(time_b, time_a) / (60 * 60 * 24);
-}
-
-double average(const std::vector<int>& arr) {
-    if (arr.empty()) return 0.0;
-    
-    double sum = 0;
     for (int num : arr) {
-        sum += num;
+        if (num < minElem) minElem = num;
+        if (num > maxElem) maxElem = num;
+    }
+}
+
+// Задание 2: Сумма элементов массива, которые меньше указанного значения
+int sumLessThan(const std::vector<int>& arr, int threshold) {
+    int sum = 0;
+    
+    for (int num : arr) {
+        if (num < threshold) sum += num;
     }
     
-    return sum / arr.size();
+    return sum;
 }
 
-void countElements(const std::vector<int>& arr, int& positive, int& negative, int& zero) {
-    positive = negative = zero = 0;
+// Задание 3: Нахождение месяца с максимальной и минимальной прибылью в заданном диапазоне
+void findMaxMinProfit(const std::vector<int>& profits, int startMonth, int endMonth, int& maxMonth, int& minMonth) {
+    maxMonth = startMonth;
+    minMonth = startMonth;
     
-    for (int num : arr) {
-        if (num > 0) positive++;
-        else if (num < 0) negative++;
-        else zero++;
+    for (int i = startMonth - 1; i < endMonth; ++i) {
+        if (profits[i] > profits[maxMonth - 1]) maxMonth = i + 1;
+        if (profits[i] < profits[minMonth - 1]) minMonth = i + 1;
     }
 }
 
 int main() {
-    // Пример использования функций
-    
-    // Задание 1: Разность между датами
-    std::cout << daysBetween(1, 1, 2020, 1, 1, 2021) << std::endl;
+    srand(time(0));
 
-    // Задание 2: Среднее арифметическое
-    std::vector<int> arr = {1, 2, 3, 4, 5};
-    std::cout << average(arr) << std::endl;
-    
-    // Задание 3: Количество положительных, отрицательных и нулевых элементов
-    int positive = 0, negative = 0, zero = 0;
-    countElements(arr, positive, negative, zero);
-    std::cout << "Positive: " << positive << ", Negative: " << negative << ", Zero: " << zero << std::endl;
-    
+    // Пример использования Задания 1: Нахождение минимального и максимального элементов массива
+    std::vector<int> arr = {10, 20, 5, 30, -10, 50, 40};
+    int minElem, maxElem;
+    findMinMax(arr, minElem, maxElem);
+    std::cout << "Min: " << minElem << ", Max: " << maxElem << std::endl;
+
+    // Пример использования Задания 2: Сумма элементов меньше указанного числа
+    int threshold = 15;
+    std::cout << "Sum of elements less than " << threshold << ": " << sumLessThan(arr, threshold) << std::endl;
+
+    // Пример использования Задания 3: Нахождение месяца с максимальной и минимальной прибылью
+    std::vector<int> profits = {200, 150, 180, 220, 190, 250, 270, 260, 230, 240, 210, 220};
+    int startMonth = 3, endMonth = 6;
+    int maxMonth, minMonth;
+    findMaxMinProfit(profits, startMonth, endMonth, maxMonth, minMonth);
+    std::cout << "Max profit month: " << maxMonth << ", Min profit month: " << minMonth << std::endl;
+
     return 0;
 }
-
