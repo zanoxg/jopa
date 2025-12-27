@@ -1,72 +1,117 @@
 #include <iostream>
-#include <cstdlib>
-#include <ctime>
+#include <vector>
+#include <limits>
 
-// Задание 1: Копирование элементов из одного массива в два массива по 5 элементов
-void copyArray(int* src, int* dest1, int* dest2) {
-    for (int i = 0; i < 5; ++i) {
-        dest1[i] = src[i];
-        dest2[i] = src[i + 5];
+// Задание 1: Анализ числа
+void analyzeNumber(int num) {
+    int countDigits = 0;
+    int sumDigits = 0;
+    int zeroCount = 0;
+    
+    // Обработка числа
+    while (num != 0) {
+        int digit = num % 10;
+        sumDigits += digit;
+        if (digit == 0) {
+            zeroCount++;
+        }
+        countDigits++;
+        num /= 10;
     }
+
+    double average = countDigits > 0 ? static_cast<double>(sumDigits) / countDigits : 0;
+
+    std::cout << "Количество цифр: " << countDigits << std::endl;
+    std::cout << "Сумма цифр: " << sumDigits << std::endl;
+    std::cout << "Среднее арифметическое: " << average << std::endl;
+    std::cout << "Количество нулей: " << zeroCount << std::endl;
 }
 
-// Задание 2: Поэлементная сумма двух массивов с занесением результата в третий
-void sumArrays(int* arr1, int* arr2, int* result, int size) {
-    for (int i = 0; i < size; ++i) {
-        result[i] = arr1[i] + arr2[i];
+// Задание 2: Программа расчета заказа в кафетерии
+void calculateOrder(int numPeople) {
+    // Меню кафетерия
+    std::vector<std::string> drinks = {"Кофе", "Чай", "Сок"};
+    std::vector<std::string> desserts = {"Пирог", "Кекс", "Печенье"};
+    std::vector<int> drinksPrices = {100, 50, 80}; // Цена напитков
+    std::vector<int> dessertsPrices = {120, 60, 40}; // Цена десертов
+
+    int totalOrder = 0;
+
+    for (int i = 0; i < numPeople; ++i) {
+        std::cout << "\nЗаказ для клиента #" << i + 1 << ":\n";
+        int personTotal = 0;
+
+        // Напитки
+        std::cout << "Выберите напитки (введите номер, 0 для завершения):\n";
+        for (int i = 0; i < drinks.size(); ++i) {
+            std::cout << i + 1 << ". " << drinks[i] << " - " << drinksPrices[i] << " руб.\n";
+        }
+
+        while (true) {
+            int choice;
+            std::cout << "Ваш выбор (0 для завершения): ";
+            std::cin >> choice;
+            if (choice == 0) break;
+            if (choice >= 1 && choice <= drinks.size()) {
+                personTotal += drinksPrices[choice - 1];
+            } else {
+                std::cout << "Неверный выбор. Попробуйте снова.\n";
+            }
+        }
+
+        // Десерты
+        std::cout << "Выберите десерты (введите номер, 0 для завершения):\n";
+        for (int i = 0; i < desserts.size(); ++i) {
+            std::cout << i + 1 << ". " << desserts[i] << " - " << dessertsPrices[i] << " руб.\n";
+        }
+
+        while (true) {
+            int choice;
+            std::cout << "Ваш выбор (0 для завершения): ";
+            std::cin >> choice;
+            if (choice == 0) break;
+            if (choice >= 1 && choice <= desserts.size()) {
+                personTotal += dessertsPrices[choice - 1];
+            } else {
+                std::cout << "Неверный выбор. Попробуйте снова.\n";
+            }
+        }
+
+        totalOrder += personTotal;
+        std::cout << "Сумма заказа для клиента #" << i + 1 << ": " << personTotal << " руб.\n";
     }
+
+    std::cout << "\nОбщая сумма заказа для всей компании: " << totalOrder << " руб.\n";
 }
 
 int main() {
-    srand(time(0));
+    int choice;
 
-    // Задание 1: Генерация и копирование элементов массива
-    int array1[10];
-    for (int i = 0; i < 10; ++i) {
-        array1[i] = rand() % 100;  // Сгенерировать число в диапазоне от 0 до 99
-    }
-    
-    int array2[5], array3[5];
-    copyArray(array1, array2, array3);
+    while (true) {
+        std::cout << "\nМеню:\n";
+        std::cout << "1. Анализ числа\n";
+        std::cout << "2. Расчет заказа в кафетерии\n";
+        std::cout << "0. Выход\n";
+        std::cout << "Ваш выбор: ";
+        std::cin >> choice;
 
-    std::cout << "Original Array: ";
-    for (int i = 0; i < 10; ++i) {
-        std::cout << array1[i] << " ";
+        if (choice == 1) {
+            int num;
+            std::cout << "Введите число: ";
+            std::cin >> num;
+            analyzeNumber(num);
+        } else if (choice == 2) {
+            int numPeople;
+            std::cout << "На сколько человек заказ? ";
+            std::cin >> numPeople;
+            calculateOrder(numPeople);
+        } else if (choice == 0) {
+            std::cout << "Выход из программы.\n";
+            break;
+        } else {
+            std::cout << "Неверный выбор. Попробуйте снова.\n";
+        }
     }
-    std::cout << "\nArray 1 (First 5 elements): ";
-    for (int i = 0; i < 5; ++i) {
-        std::cout << array2[i] << " ";
-    }
-    std::cout << "\nArray 2 (Last 5 elements): ";
-    for (int i = 0; i < 5; ++i) {
-        std::cout << array3[i] << " ";
-    }
-    std::cout << std::endl;
-
-    // Задание 2: Генерация двух массивов и поэлементная сумма
-    int array4[5], array5[5], result[5];
-    for (int i = 0; i < 5; ++i) {
-        array4[i] = rand() % 100;
-        array5[i] = rand() % 100;
-    }
-
-    sumArrays(array4, array5, result, 5);
-
-    std::cout << "\nArray 4: ";
-    for (int i = 0; i < 5; ++i) {
-        std::cout << array4[i] << " ";
-    }
-    
-    std::cout << "\nArray 5: ";
-    for (int i = 0; i < 5; ++i) {
-        std::cout << array5[i] << " ";
-    }
-    
-    std::cout << "\nSum of Array 4 and Array 5: ";
-    for (int i = 0; i < 5; ++i) {
-        std::cout << result[i] << " ";
-    }
-    std::cout << std::endl;
 
     return 0;
 }
