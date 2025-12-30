@@ -1,222 +1,420 @@
 #include <iostream>
-#include <cmath>
 #include <iomanip>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
-// Функция для задания 1
-void task1() {
-    cout << "\n=== ЗАДАНИЕ 1 ===" << endl;
-    cout << "Вычисление суммы целых чисел от a до 500" << endl;
-    cout << "=========================================" << endl;
-    
-    int a;
-    long long sum = 0;
-    
-    cout << "Введите целое число a: ";
-    cin >> a;
-    
-    if (a > 500) {
-        cout << "Ошибка: a должно быть меньше или равно 500!" << endl;
-        return;
-    }
-    
-    // Вычисление суммы циклом
-    for (int i = a; i <= 500; i++) {
-        sum += i;
-    }
-    
-    cout << "Сумма чисел от " << a << " до 500 (через цикл): " << sum << endl;
-    
-    // Альтернативное решение через формулу арифметической прогрессии
-    int n = 500 - a + 1;
-    long long sum_formula = (a + 500) * n / 2;
-    cout << "Сумма чисел от " << a << " до 500 (по формуле): " << sum_formula << endl;
-}
+// Прототипы функций
+void printMatrix(int** matrix, int rows, int cols);
+int** createMatrix(int rows, int cols);
+void deleteMatrix(int** matrix, int rows);
+void fillMatrixRandom(int** matrix, int rows, int cols, int min = 1, int max = 100);
 
-// Функция для задания 2
-void task2() {
-    cout << "\n=== ЗАДАНИЕ 2 ===" << endl;
-    cout << "Вычисление x в степени y" << endl;
-    cout << "======================" << endl;
-    
-    int x, y;
-    
-    cout << "Введите целое число x: ";
-    cin >> x;
-    cout << "Введите целое число y (неотрицательное): ";
-    cin >> y;
-    
-    if (y < 0) {
-        cout << "Ошибка: степень y должна быть неотрицательной!" << endl;
-        return;
+// Задание 1: Добавление столбца
+int** addColumn(int** matrix, int rows, int& cols, int position) {
+    // Проверка корректности позиции
+    if (position < 0 || position > cols) {
+        cout << "Неверная позиция для добавления столбца!" << endl;
+        return matrix;
     }
     
-    // Способ 1: Использование цикла
-    long long result_loop = 1;
-    for (int i = 0; i < y; i++) {
-        result_loop *= x;
+    // Создаем новую матрицу с увеличенным количеством столбцов
+    int** newMatrix = new int*[rows];
+    for (int i = 0; i < rows; i++) {
+        newMatrix[i] = new int[cols + 1];
     }
     
-    // Способ 2: Использование функции pow() из cmath
-    double result_pow = pow(x, y);
-    
-    cout << "Результат (через цикл): " << x << "^" << y << " = " << result_loop << endl;
-    cout << "Результат (через pow()): " << x << "^" << y << " = " << fixed << result_pow << endl;
-}
-
-// Функция для задания 3
-void task3() {
-    cout << "\n=== ЗАДАНИЕ 3 ===" << endl;
-    cout << "Среднее арифметическое чисел от 1 до 1000" << endl;
-    cout << "=========================================" << endl;
-    
-    long long sum = 0;
-    int count = 1000;
-    
-    // Вычисляем сумму
-    for (int i = 1; i <= count; i++) {
-        sum += i;
-    }
-    
-    // Вычисляем среднее арифметическое
-    double average = static_cast<double>(sum) / count;
-    
-    cout << "Сумма чисел от 1 до 1000: " << sum << endl;
-    cout << "Количество чисел: " << count << endl;
-    cout << "Среднее арифметическое: " << fixed << setprecision(2) << average << endl;
-    
-    // Альтернативное решение через формулу
-    double average_formula = (1 + 1000) / 2.0;
-    cout << "Среднее арифметическое (по формуле): " << average_formula << endl;
-}
-
-// Функция для задания 4
-void task4() {
-    cout << "\n=== ЗАДАНИЕ 4 ===" << endl;
-    cout << "Произведение всех целых чисел от a до 20" << endl;
-    cout << "=========================================" << endl;
-    
-    int a;
-    long long product = 1; // Используем long long для больших произведений
-    
-    cout << "Введите целое число a (1 <= a <= 20): ";
-    cin >> a;
-    
-    if (a < 1 || a > 20) {
-        cout << "Ошибка: a должно быть в диапазоне от 1 до 20!" << endl;
-        return;
-    }
-    
-    // Вычисляем произведение
-    for (int i = a; i <= 20; i++) {
-        product *= i;
-        // Проверка на переполнение (примерная)
-        if (product < 0) {
-            cout << "Внимание: возможное переполнение!" << endl;
-            break;
+    // Копируем данные со сдвигом
+    for (int i = 0; i < rows; i++) {
+        int newCol = 0;
+        for (int j = 0; j < cols; j++) {
+            if (j == position) {
+                // Вставляем новый столбец со случайными значениями
+                newMatrix[i][newCol++] = rand() % 100;
+            }
+            newMatrix[i][newCol++] = matrix[i][j];
+        }
+        // Если позиция в конце
+        if (position == cols) {
+            newMatrix[i][newCol] = rand() % 100;
         }
     }
     
-    cout << "Произведение чисел от " << a << " до 20: " << product << endl;
+    // Увеличиваем счетчик столбцов
+    cols++;
     
-    // Для небольших значений выведем все множители
-    if (a <= 10) {
-        cout << "Множители: ";
-        for (int i = a; i <= 20; i++) {
-            cout << i;
-            if (i < 20) cout << " * ";
+    // Удаляем старую матрицу
+    deleteMatrix(matrix, rows);
+    
+    return newMatrix;
+}
+
+// Задание 2: Удаление столбца
+int** deleteColumn(int** matrix, int rows, int& cols, int position) {
+    // Проверка корректности позиции и наличия столбцов
+    if (position < 0 || position >= cols || cols <= 1) {
+        cout << "Неверная позиция для удаления или нельзя удалить последний столбец!" << endl;
+        return matrix;
+    }
+    
+    // Создаем новую матрицу с уменьшенным количеством столбцов
+    int** newMatrix = new int*[rows];
+    for (int i = 0; i < rows; i++) {
+        newMatrix[i] = new int[cols - 1];
+    }
+    
+    // Копируем данные, пропуская удаляемый столбец
+    for (int i = 0; i < rows; i++) {
+        int newCol = 0;
+        for (int j = 0; j < cols; j++) {
+            if (j != position) {
+                newMatrix[i][newCol++] = matrix[i][j];
+            }
+        }
+    }
+    
+    // Уменьшаем счетчик столбцов
+    cols--;
+    
+    // Удаляем старую матрицу
+    deleteMatrix(matrix, rows);
+    
+    return newMatrix;
+}
+
+// Задание 3: Циклический сдвиг
+void cyclicShift(int** matrix, int rows, int cols, int shiftCount, char direction, char axis) {
+    // Проверка параметров
+    if (shiftCount <= 0) {
+        cout << "Количество сдвигов должно быть положительным!" << endl;
+        return;
+    }
+    
+    // Нормализуем количество сдвигов
+    shiftCount = shiftCount % (axis == 'r' ? rows : cols);
+    if (shiftCount == 0) return;
+    
+    // Временный массив для хранения данных
+    int* temp = new int[axis == 'r' ? cols : rows];
+    
+    if (axis == 'r') { // Сдвиг строк
+        for (int i = 0; i < rows; i++) {
+            if (direction == 'l') { // Сдвиг влево
+                // Сохраняем первые shiftCount элементов
+                for (int j = 0; j < shiftCount; j++) {
+                    temp[j] = matrix[i][j];
+                }
+                // Сдвигаем остальные элементы
+                for (int j = shiftCount; j < cols; j++) {
+                    matrix[i][j - shiftCount] = matrix[i][j];
+                }
+                // Восстанавливаем сохраненные элементы в конец
+                for (int j = 0; j < shiftCount; j++) {
+                    matrix[i][cols - shiftCount + j] = temp[j];
+                }
+            } else { // Сдвиг вправо
+                // Сохраняем последние shiftCount элементов
+                for (int j = 0; j < shiftCount; j++) {
+                    temp[j] = matrix[i][cols - shiftCount + j];
+                }
+                // Сдвигаем остальные элементы
+                for (int j = cols - 1; j >= shiftCount; j--) {
+                    matrix[i][j] = matrix[i][j - shiftCount];
+                }
+                // Восстанавливаем сохраненные элементы в начало
+                for (int j = 0; j < shiftCount; j++) {
+                    matrix[i][j] = temp[j];
+                }
+            }
+        }
+    } else { // Сдвиг столбцов
+        for (int j = 0; j < cols; j++) {
+            if (direction == 'u') { // Сдвиг вверх
+                // Сохраняем первые shiftCount элементов
+                for (int i = 0; i < shiftCount; i++) {
+                    temp[i] = matrix[i][j];
+                }
+                // Сдвигаем остальные элементы
+                for (int i = shiftCount; i < rows; i++) {
+                    matrix[i - shiftCount][j] = matrix[i][j];
+                }
+                // Восстанавливаем сохраненные элементы в конец
+                for (int i = 0; i < shiftCount; i++) {
+                    matrix[rows - shiftCount + i][j] = temp[i];
+                }
+            } else { // Сдвиг вниз
+                // Сохраняем последние shiftCount элементов
+                for (int i = 0; i < shiftCount; i++) {
+                    temp[i] = matrix[rows - shiftCount + i][j];
+                }
+                // Сдвигаем остальные элементы
+                for (int i = rows - 1; i >= shiftCount; i--) {
+                    matrix[i][j] = matrix[i - shiftCount][j];
+                }
+                // Восстанавливаем сохраненные элементы в начало
+                for (int i = 0; i < shiftCount; i++) {
+                    matrix[i][j] = temp[i];
+                }
+            }
+        }
+    }
+    
+    delete[] temp;
+}
+
+// Вспомогательные функции
+int** createMatrix(int rows, int cols) {
+    int** matrix = new int*[rows];
+    for (int i = 0; i < rows; i++) {
+        matrix[i] = new int[cols];
+    }
+    return matrix;
+}
+
+void deleteMatrix(int** matrix, int rows) {
+    for (int i = 0; i < rows; i++) {
+        delete[] matrix[i];
+    }
+    delete[] matrix;
+}
+
+void fillMatrixRandom(int** matrix, int rows, int cols, int min, int max) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            matrix[i][j] = rand() % (max - min + 1) + min;
+        }
+    }
+}
+
+void printMatrix(int** matrix, int rows, int cols) {
+    cout << "\nМатрица " << rows << "x" << cols << ":\n";
+    cout << string(cols * 5 + 1, '-') << endl;
+    
+    for (int i = 0; i < rows; i++) {
+        cout << "|";
+        for (int j = 0; j < cols; j++) {
+            cout << setw(4) << matrix[i][j] << "|";
         }
         cout << endl;
+        cout << string(cols * 5 + 1, '-') << endl;
     }
+    cout << endl;
 }
 
-// Функция для задания 5
-void task5() {
-    cout << "\n=== ЗАДАНИЕ 5 ===" << endl;
-    cout << "Таблица умножения на k" << endl;
-    cout << "======================" << endl;
+// Демонстрационная функция
+void demo() {
+    srand(time(0));
     
-    int k;
+    int rows, cols;
+    cout << "Введите количество строк матрицы: ";
+    cin >> rows;
+    cout << "Введите количество столбцов матрицы: ";
+    cin >> cols;
     
-    cout << "Введите номер варианта k: ";
-    cin >> k;
+    // Создаем и заполняем матрицу
+    int** matrix = createMatrix(rows, cols);
+    fillMatrixRandom(matrix, rows, cols);
     
-    cout << "\nТаблица умножения на " << k << ":" << endl;
-    cout << "---------------------" << endl;
+    cout << "\n=== ИСХОДНАЯ МАТРИЦА ===";
+    printMatrix(matrix, rows, cols);
     
-    // Выводим таблицу умножения от 2 до 9 (или другой диапазон)
-    for (int i = 2; i <= 9; i++) {
-        cout << k << " x " << i << " = " << (k * i) << endl;
+    // Демонстрация задания 1: добавление столбца
+    cout << "\n=== ЗАДАНИЕ 1: ДОБАВЛЕНИЕ СТОЛБЦА ===" << endl;
+    int addPos;
+    cout << "Введите позицию для добавления столбца (0-" << cols << "): ";
+    cin >> addPos;
+    
+    matrix = addColumn(matrix, rows, cols, addPos);
+    cout << "После добавления столбца:";
+    printMatrix(matrix, rows, cols);
+    
+    // Демонстрация задания 2: удаление столбца
+    cout << "\n=== ЗАДАНИЕ 2: УДАЛЕНИЕ СТОЛБЦА ===" << endl;
+    int delPos;
+    cout << "Введите позицию для удаления столбца (0-" << cols - 1 << "): ";
+    cin >> delPos;
+    
+    matrix = deleteColumn(matrix, rows, cols, delPos);
+    cout << "После удаления столбца:";
+    printMatrix(matrix, rows, cols);
+    
+    // Демонстрация задания 3: циклический сдвиг
+    cout << "\n=== ЗАДАНИЕ 3: ЦИКЛИЧЕСКИЙ СДВИГ ===" << endl;
+    
+    // Сначала восстанавливаем оригинальные размеры для демонстрации
+    int originalRows = rows, originalCols = cols;
+    deleteMatrix(matrix, rows);
+    rows = originalRows;
+    cols = originalCols;
+    matrix = createMatrix(rows, cols);
+    fillMatrixRandom(matrix, rows, cols);
+    
+    cout << "\nНовая матрица для демонстрации сдвига:";
+    printMatrix(matrix, rows, cols);
+    
+    char axis, direction;
+    int shiftCount;
+    
+    cout << "Выберите ось для сдвига (r - строки, c - столбцы): ";
+    cin >> axis;
+    
+    if (axis == 'r') {
+        cout << "Выберите направление сдвига строк (l - влево, r - вправо): ";
+        cin >> direction;
+    } else {
+        cout << "Выберите направление сдвига столбцов (u - вверх, d - вниз): ";
+        cin >> direction;
     }
     
-    // Дополнительно: таблица в более красивом формате
-    cout << "\nТаблица умножения на " << k << " (форматированная):" << endl;
-    cout << "--------------------------------" << endl;
-    for (int i = 1; i <= 10; i++) {
-        cout << setw(2) << k << " x " << setw(2) << i << " = " << setw(3) << (k * i);
-        if (i % 2 == 0) cout << endl;
-        else cout << "   |   ";
-    }
+    cout << "Введите количество сдвигов: ";
+    cin >> shiftCount;
+    
+    cyclicShift(matrix, rows, cols, shiftCount, direction, axis);
+    
+    cout << "\nПосле циклического сдвига:";
+    printMatrix(matrix, rows, cols);
+    
+    // Освобождаем память
+    deleteMatrix(matrix, rows);
 }
 
-// Главная функция с меню
-int main() {
+// Меню для интерактивного тестирования
+void menu() {
+    srand(time(0));
+    
+    int** matrix = nullptr;
+    int rows = 0, cols = 0;
     int choice;
     
     do {
         cout << "\n========================================" << endl;
-        cout << "          МЕНЮ ВЫБОРА ЗАДАНИЙ           " << endl;
+        cout << "         МЕНЮ УПРАВЛЕНИЯ МАТРИЦЕЙ       " << endl;
         cout << "========================================" << endl;
-        cout << "1. Задание 1 - Сумма чисел от a до 500" << endl;
-        cout << "2. Задание 2 - Возведение в степень" << endl;
-        cout << "3. Задание 3 - Среднее арифметическое (1-1000)" << endl;
-        cout << "4. Задание 4 - Произведение чисел от a до 20" << endl;
-        cout << "5. Задание 5 - Таблица умножения" << endl;
-        cout << "6. Выполнить все задания" << endl;
+        cout << "1. Создать новую матрицу" << endl;
+        cout << "2. Вывести матрицу" << endl;
+        cout << "3. Добавить столбец (Задание 1)" << endl;
+        cout << "4. Удалить столбец (Задание 2)" << endl;
+        cout << "5. Циклический сдвиг (Задание 3)" << endl;
+        cout << "6. Запустить демонстрацию всех заданий" << endl;
         cout << "0. Выход" << endl;
         cout << "========================================" << endl;
-        cout << "Выберите задание (0-6): ";
+        cout << "Выберите действие: ";
         cin >> choice;
         
         switch(choice) {
-            case 1:
-                task1();
+            case 1: {
+                if (matrix != nullptr) {
+                    deleteMatrix(matrix, rows);
+                }
+                cout << "Введите количество строк: ";
+                cin >> rows;
+                cout << "Введите количество столбцов: ";
+                cin >> cols;
+                matrix = createMatrix(rows, cols);
+                fillMatrixRandom(matrix, rows, cols);
+                cout << "Матрица создана и заполнена случайными числами." << endl;
                 break;
-            case 2:
-                task2();
+            }
+            case 2: {
+                if (matrix == nullptr) {
+                    cout << "Сначала создайте матрицу!" << endl;
+                } else {
+                    printMatrix(matrix, rows, cols);
+                }
                 break;
-            case 3:
-                task3();
+            }
+            case 3: {
+                if (matrix == nullptr) {
+                    cout << "Сначала создайте матрицу!" << endl;
+                } else {
+                    int pos;
+                    cout << "Текущий размер: " << rows << "x" << cols << endl;
+                    cout << "Введите позицию для добавления столбца (0-" << cols << "): ";
+                    cin >> pos;
+                    matrix = addColumn(matrix, rows, cols, pos);
+                    cout << "Столбец добавлен. Новый размер: " << rows << "x" << cols << endl;
+                }
                 break;
-            case 4:
-                task4();
+            }
+            case 4: {
+                if (matrix == nullptr) {
+                    cout << "Сначала создайте матрицу!" << endl;
+                } else {
+                    int pos;
+                    cout << "Текущий размер: " << rows << "x" << cols << endl;
+                    cout << "Введите позицию для удаления столбца (0-" << cols - 1 << "): ";
+                    cin >> pos;
+                    matrix = deleteColumn(matrix, rows, cols, pos);
+                    cout << "Столбец удален. Новый размер: " << rows << "x" << cols << endl;
+                }
                 break;
-            case 5:
-                task5();
+            }
+            case 5: {
+                if (matrix == nullptr) {
+                    cout << "Сначала создайте матрицу!" << endl;
+                } else {
+                    char axis, direction;
+                    int shiftCount;
+                    
+                    cout << "Выберите ось для сдвига (r - строки, c - столбцы): ";
+                    cin >> axis;
+                    
+                    if (axis == 'r') {
+                        cout << "Выберите направление сдвига строк (l - влево, r - вправо): ";
+                        cin >> direction;
+                    } else {
+                        cout << "Выберите направление сдвига столбцов (u - вверх, d - вниз): ";
+                        cin >> direction;
+                    }
+                    
+                    cout << "Введите количество сдвигов: ";
+                    cin >> shiftCount;
+                    
+                    cyclicShift(matrix, rows, cols, shiftCount, direction, axis);
+                    cout << "Сдвиг выполнен." << endl;
+                }
                 break;
-            case 6:
-                cout << "\nВыполнение всех заданий:\n";
-                task1();
-                task2();
-                task3();
-                task4();
-                task5();
+            }
+            case 6: {
+                demo();
+                matrix = nullptr; // Матрица удалена в demo()
+                rows = cols = 0;
                 break;
-            case 0:
+            }
+            case 0: {
+                if (matrix != nullptr) {
+                    deleteMatrix(matrix, rows);
+                }
                 cout << "Выход из программы." << endl;
                 break;
+            }
             default:
-                cout << "Неверный выбор! Попробуйте снова." << endl;
+                cout << "Неверный выбор!" << endl;
         }
-        
-        if (choice != 0) {
-            cout << "\nНажмите Enter для продолжения...";
-            cin.ignore();
-            cin.get();
-        }
-        
     } while (choice != 0);
+}
+
+int main() {
+    // Устанавливаем русскую локаль для корректного отображения
+    setlocale(LC_ALL, "Russian");
+    
+    cout << "========================================" << endl;
+    cout << "   РАБОТА С ДВУМЕРНЫМИ МАССИВАМИ (C++)  " << endl;
+    cout << "========================================" << endl;
+    
+    int mode;
+    cout << "Выберите режим работы:" << endl;
+    cout << "1. Интерактивное меню" << endl;
+    cout << "2. Автоматическая демонстрация" << endl;
+    cout << "Ваш выбор: ";
+    cin >> mode;
+    
+    if (mode == 1) {
+        menu();
+    } else {
+        demo();
+    }
     
     return 0;
 }
