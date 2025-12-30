@@ -1,117 +1,201 @@
 #include <iostream>
-#include <vector>
-#include <limits>
+#include <string>
 
-// Задание 1: Анализ числа
-void analyzeNumber(int num) {
-    int countDigits = 0;
-    int sumDigits = 0;
-    int zeroCount = 0;
-    
-    // Обработка числа
-    while (num != 0) {
-        int digit = num % 10;
-        sumDigits += digit;
-        if (digit == 0) {
-            zeroCount++;
-        }
-        countDigits++;
-        num /= 10;
-    }
+using namespace std;
 
-    double average = countDigits > 0 ? static_cast<double>(sumDigits) / countDigits : 0;
-
-    std::cout << "Количество цифр: " << countDigits << std::endl;
-    std::cout << "Сумма цифр: " << sumDigits << std::endl;
-    std::cout << "Среднее арифметическое: " << average << std::endl;
-    std::cout << "Количество нулей: " << zeroCount << std::endl;
+void printFigureA() {
+    cout << "Фигура а:\n";
+    cout << "*******\n";
+    cout << "*     *\n";
+    cout << "*     *\n";
+    cout << "*******\n\n";
 }
 
-// Задание 2: Программа расчета заказа в кафетерии
-void calculateOrder(int numPeople) {
-    // Меню кафетерия
-    std::vector<std::string> drinks = {"Кофе", "Чай", "Сок"};
-    std::vector<std::string> desserts = {"Пирог", "Кекс", "Печенье"};
-    std::vector<int> drinksPrices = {100, 50, 80}; // Цена напитков
-    std::vector<int> dessertsPrices = {120, 60, 40}; // Цена десертов
+void printFigureB() {
+    cout << "Фигура б:\n";
+    cout << "*\n";
+    cout << "**\n";
+    cout << "***\n";
+    cout << "****\n";
+    cout << "*****\n\n";
+}
 
-    int totalOrder = 0;
+void printFigureC() {
+    cout << "Фигура в:\n";
+    cout << "    *\n";
+    cout << "   ***\n";
+    cout << "  *****\n";
+    cout << " *******\n";
+    cout << "*********\n\n";
+}
 
-    for (int i = 0; i < numPeople; ++i) {
-        std::cout << "\nЗаказ для клиента #" << i + 1 << ":\n";
-        int personTotal = 0;
+void printFigureD() {
+    cout << "Фигура г:\n";
+    cout << "*     *\n";
+    cout << " *   *\n";
+    cout << "  * *\n";
+    cout << "   *\n";
+    cout << "  * *\n";
+    cout << " *   *\n";
+    cout << "*     *\n\n";
+}
 
-        // Напитки
-        std::cout << "Выберите напитки (введите номер, 0 для завершения):\n";
-        for (int i = 0; i < drinks.size(); ++i) {
-            std::cout << i + 1 << ". " << drinks[i] << " - " << drinksPrices[i] << " руб.\n";
-        }
+void printFigureE() {
+    cout << "Фигура д:\n";
+    cout << "   ***\n";
+    cout << "  *   *\n";
+    cout << " *     *\n";
+    cout << "*       *\n";
+    cout << " *     *\n";
+    cout << "  *   *\n";
+    cout << "   ***\n\n";
+}
 
-        while (true) {
-            int choice;
-            std::cout << "Ваш выбор (0 для завершения): ";
-            std::cin >> choice;
-            if (choice == 0) break;
-            if (choice >= 1 && choice <= drinks.size()) {
-                personTotal += drinksPrices[choice - 1];
-            } else {
-                std::cout << "Неверный выбор. Попробуйте снова.\n";
-            }
-        }
+void printFigureF() {
+    cout << "Фигура е:\n";
+    cout << "    *\n";
+    cout << "   * *\n";
+    cout << "  *   *\n";
+    cout << " *     *\n";
+    cout << "*       *\n";
+    cout << " *     *\n";
+    cout << "  *   *\n";
+    cout << "   * *\n";
+    cout << "    *\n\n";
+}
 
-        // Десерты
-        std::cout << "Выберите десерты (введите номер, 0 для завершения):\n";
-        for (int i = 0; i < desserts.size(); ++i) {
-            std::cout << i + 1 << ". " << desserts[i] << " - " << dessertsPrices[i] << " руб.\n";
-        }
+void printFigureG() {
+    cout << "Фигура ж:\n";
+    cout << "*********\n";
+    cout << " *******\n";
+    cout << "  *****\n";
+    cout << "   ***\n";
+    cout << "    *\n\n";
+}
 
-        while (true) {
-            int choice;
-            std::cout << "Ваш выбор (0 для завершения): ";
-            std::cin >> choice;
-            if (choice == 0) break;
-            if (choice >= 1 && choice <= desserts.size()) {
-                personTotal += dessertsPrices[choice - 1];
-            } else {
-                std::cout << "Неверный выбор. Попробуйте снова.\n";
-            }
-        }
+void printFigureH() {
+    cout << "Фигура з:\n";
+    cout << "    *\n";
+    cout << "   ***\n";
+    cout << "  *****\n";
+    cout << " *******\n";
+    cout << "*********\n";
+    cout << " *******\n";
+    cout << "  *****\n";
+    cout << "   ***\n";
+    cout << "    *\n\n";
+}
 
-        totalOrder += personTotal;
-        std::cout << "Сумма заказа для клиента #" << i + 1 << ": " << personTotal << " руб.\n";
-    }
+void printFigureI() {
+    cout << "Фигура и:\n";
+    cout << "*       *\n";
+    cout << " *     *\n";
+    cout << "  *   *\n";
+    cout << "   * *\n";
+    cout << "    *\n";
+    cout << "   * *\n";
+    cout << "  *   *\n";
+    cout << " *     *\n";
+    cout << "*       *\n\n";
+}
 
-    std::cout << "\nОбщая сумма заказа для всей компании: " << totalOrder << " руб.\n";
+void printFigureJ() {
+    cout << "Фигура к:\n";
+    cout << "    *****\n";
+    cout << "   *     *\n";
+    cout << "  *       *\n";
+    cout << " *         *\n";
+    cout << "*           *\n";
+    cout << " *         *\n";
+    cout << "  *       *\n";
+    cout << "   *     *\n";
+    cout << "    *****\n\n";
+}
+
+void printAllFigures() {
+    printFigureA();
+    printFigureB();
+    printFigureC();
+    printFigureD();
+    printFigureE();
+    printFigureF();
+    printFigureG();
+    printFigureH();
+    printFigureI();
+    printFigureJ();
 }
 
 int main() {
     int choice;
-
-    while (true) {
-        std::cout << "\nМеню:\n";
-        std::cout << "1. Анализ числа\n";
-        std::cout << "2. Расчет заказа в кафетерии\n";
-        std::cout << "0. Выход\n";
-        std::cout << "Ваш выбор: ";
-        std::cin >> choice;
-
-        if (choice == 1) {
-            int num;
-            std::cout << "Введите число: ";
-            std::cin >> num;
-            analyzeNumber(num);
-        } else if (choice == 2) {
-            int numPeople;
-            std::cout << "На сколько человек заказ? ";
-            std::cin >> numPeople;
-            calculateOrder(numPeople);
-        } else if (choice == 0) {
-            std::cout << "Выход из программы.\n";
-            break;
-        } else {
-            std::cout << "Неверный выбор. Попробуйте снова.\n";
+    
+    do {
+        cout << "=====================================\n";
+        cout << "МЕНЮ ВЫБОРА ФИГУР\n";
+        cout << "=====================================\n";
+        cout << "1. Фигура а (прямоугольник)\n";
+        cout << "2. Фигура б (прямоугольный треугольник слева)\n";
+        cout << "3. Фигура в (равнобедренный треугольник)\n";
+        cout << "4. Фигура г (крест)\n";
+        cout << "5. Фигура д (ромб)\n";
+        cout << "6. Фигура е (алмаз)\n";
+        cout << "7. Фигура ж (перевернутый треугольник)\n";
+        cout << "8. Фигура з (песочные часы)\n";
+        cout << "9. Фигура и (двойной крест)\n";
+        cout << "10. Фигура к (овал)\n";
+        cout << "11. Вывести все фигуры\n";
+        cout << "0. Выход\n";
+        cout << "=====================================\n";
+        cout << "Выберите фигуру (0-11): ";
+        cin >> choice;
+        
+        switch(choice) {
+            case 1:
+                printFigureA();
+                break;
+            case 2:
+                printFigureB();
+                break;
+            case 3:
+                printFigureC();
+                break;
+            case 4:
+                printFigureD();
+                break;
+            case 5:
+                printFigureE();
+                break;
+            case 6:
+                printFigureF();
+                break;
+            case 7:
+                printFigureG();
+                break;
+            case 8:
+                printFigureH();
+                break;
+            case 9:
+                printFigureI();
+                break;
+            case 10:
+                printFigureJ();
+                break;
+            case 11:
+                printAllFigures();
+                break;
+            case 0:
+                cout << "Выход из программы.\n";
+                break;
+            default:
+                cout << "Неверный выбор! Попробуйте снова.\n";
         }
-    }
-
+        
+        if (choice != 0) {
+            cout << "Нажмите Enter для продолжения...";
+            cin.ignore();
+            cin.get();
+        }
+        
+    } while (choice != 0);
+    
     return 0;
 }
