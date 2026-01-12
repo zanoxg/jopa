@@ -1,301 +1,322 @@
 #include <iostream>
-#include <vector>
-#include <iomanip>
+#include <fstream>
 #include <string>
-#include <algorithm>
-#include <limits>
+#include <vector>
+#include <cctype>
+#include <iomanip>
 
 using namespace std;
 
 // ============================
-// ЗАДАНИЕ 1: Транспонирование матрицы
+// ЗАДАНИЕ 1: Сравнение строк двух файлов
 // ============================
 
-// Функция для создания матрицы
-vector<vector<int>> createMatrix(int rows, int cols) {
-    vector<vector<int>> matrix(rows, vector<int>(cols));
-    int counter = 1;
+bool compareFiles(const string& file1, const string& file2) {
+    ifstream fin1(file1);
+    ifstream fin2(file2);
     
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            matrix[i][j] = counter++;
-        }
+    // Проверка открытия файлов
+    if (!fin1.is_open()) {
+        cerr << "Ошибка: не удалось открыть файл " << file1 << endl;
+        return false;
     }
-    return matrix;
+    
+    if (!fin2.is_open()) {
+        cerr << "Ошибка: не удалось открыть файл " << file2 << endl;
+        fin1.close();
+        return false;
+    }
+    
+    string line1, line2;
+    int lineNumber = 1;
+    bool filesAreEqual = true;
+    
+    cout << "\n=== СРАВНЕНИЕ ФАЙЛОВ ===\n";
+    cout << "Файл 1: " << file1 << endl;
+    cout << "Файл 2: " << file2 << endl;
+    cout << string(50, '=') << endl;
+    
+    // Построчное сравнение файлов
+    while (getline(fin1, line1) || getline(fin2, line2)) {
+        bool line1Exists = !fin1.eof() || !line1.empty();
+        bool line2Exists = !fin2.eof() || !line2.empty();
+        
+        if (line1Exists && line2Exists) {
+            if (line1 != line2) {
+                cout << "\nСтрока " << lineNumber << " не совпадает:\n";
+                cout << "Файл 1: \"" << line1 << "\"\n";
+                cout << "Файл 2: \"" << line2 << "\"\n";
+                filesAreEqual = false;
+            }
+        } else if (line1Exists && !line2Exists) {
+            cout << "\nФайл 2 короче. Строка " << lineNumber << " есть только в файле 1:\n";
+            cout << "Файл 1: \"" << line1 << "\"\n";
+            filesAreEqual = false;
+        } else if (!line1Exists && line2Exists) {
+            cout << "\nФайл 1 короче. Строка " << lineNumber << " есть только в файле 2:\n";
+            cout << "Файл 2: \"" << line2 << "\"\n";
+            filesAreEqual = false;
+        }
+        
+        // Очищаем строки для следующей итерации
+        line1.clear();
+        line2.clear();
+        lineNumber++;
+    }
+    
+    // Проверяем, не остались ли строки в каком-то файле
+    if (getline(fin1, line1)) {
+        cout << "\nФайл 2 короче. Оставшиеся строки в файле 1:\n";
+        while (getline(fin1, line1)) {
+            cout << "Строка " << lineNumber++ << ": \"" << line1 << "\"\n";
+        }
+        filesAreEqual = false;
+    }
+    
+    if (getline(fin2, line2)) {
+        cout << "\nФайл 1 короче. Оставшиеся строки в файле 2:\n";
+        while (getline(fin2, line2)) {
+            cout << "Строка " << lineNumber++ << ": \"" << line2 << "\"\n";
+        }
+        filesAreEqual = false;
+    }
+    
+    if (filesAreEqual) {
+        cout << "Файлы полностью идентичны!\n";
+    } else {
+        cout << "\n" << string(50, '=') << endl;
+        cout << "Файлы не совпадают.\n";
+    }
+    
+    fin1.close();
+    fin2.close();
+    return filesAreEqual;
 }
 
-// Функция для вывода матрицы
-void printMatrix(const vector<vector<int>>& matrix, const string& title = "Матрица:") {
-    cout << "\n" << title << "\n";
-    for (const auto& row : matrix) {
-        for (int val : row) {
-            cout << setw(4) << val << " ";
-        }
-        cout << endl;
-    }
-}
-
-// Функция транспонирования матрицы
-vector<vector<int>> transposeMatrix(const vector<vector<int>>& matrix) {
-    if (matrix.empty()) return {};
+void createTestFiles() {
+    // Создаем тестовые файлы для демонстрации
+    ofstream fout1("file1.txt");
+    ofstream fout2("file2.txt");
     
-    int rows = matrix.size();
-    int cols = matrix[0].size();
-    
-    // Создаем транспонированную матрицу (меняем местами строки и столбцы)
-    vector<vector<int>> transposed(cols, vector<int>(rows));
-    
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            transposed[j][i] = matrix[i][j];
-        }
+    if (fout1.is_open()) {
+        fout1 << "Первая строка файла 1\n";
+        fout1 << "Вторая строка файла 1\n";
+        fout1 << "Третья строка файла 1\n";
+        fout1 << "Эта строка отличается\n";
+        fout1 << "Пятая строка файла 1\n";
+        fout1.close();
+        cout << "Создан тестовый файл: file1.txt\n";
     }
     
-    return transposed;
+    if (fout2.is_open()) {
+        fout2 << "Первая строка файла 1\n";
+        fout2 << "Вторая строка файла 1\n";
+        fout2 << "Третья строка файла 1\n";
+        fout2 << "А эта строка другая\n";
+        fout2 << "Пятая строка файла 1\n";
+        fout2 << "Шестая строка (только во втором файле)\n";
+        fout2.close();
+        cout << "Создан тестовый файл: file2.txt\n";
+    }
 }
 
 void task1() {
-    cout << "=== ЗАДАНИЕ 1: ТРАНСПОНИРОВАНИЕ МАТРИЦЫ ===\n";
+    cout << "\n=== ЗАДАНИЕ 1: СРАВНЕНИЕ СТРОК ДВУХ ФАЙЛОВ ===\n";
     
-    int rows, cols;
-    cout << "Введите количество строк матрицы: ";
-    cin >> rows;
-    cout << "Введите количество столбцов матрицы: ";
-    cin >> cols;
+    int choice;
+    cout << "1. Использовать тестовые файлы\n";
+    cout << "2. Ввести имена файлов вручную\n";
+    cout << "Выберите вариант: ";
+    cin >> choice;
+    cin.ignore(); // Очищаем буфер ввода
     
-    // Создаем исходную матрицу
-    vector<vector<int>> original = createMatrix(rows, cols);
-    printMatrix(original, "Исходная матрица:");
+    string file1, file2;
     
-    // Транспонируем матрицу
-    vector<vector<int>> transposed = transposeMatrix(original);
-    printMatrix(transposed, "Транспонированная матрица:");
+    if (choice == 1) {
+        createTestFiles();
+        file1 = "file1.txt";
+        file2 = "file2.txt";
+    } else {
+        cout << "Введите имя первого файла: ";
+        getline(cin, file1);
+        cout << "Введите имя второго файла: ";
+        getline(cin, file2);
+    }
     
-    cout << "Размеры исходной матрицы: " << rows << "x" << cols << endl;
-    cout << "Размеры транспонированной матрицы: " << cols << "x" << rows << endl;
+    compareFiles(file1, file2);
 }
 
 // ============================
-// ЗАДАНИЕ 2: Телефонная книга
+// ЗАДАНИЕ 2: Статистика по файлу
 // ============================
 
-struct Contact {
-    string name;
-    string phone;
-};
+// Функция для проверки, является ли символ гласной буквой (русской или английской)
+bool isVowel(char c) {
+    c = tolower(c);
+    // Английские гласные
+    if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || 
+        c == 'y') {
+        return true;
+    }
+    // Русские гласные
+    if (c == 'а' || c == 'е' || c == 'ё' || c == 'и' || c == 'о' || 
+        c == 'у' || c == 'ы' || c == 'э' || c == 'ю' || c == 'я') {
+        return true;
+    }
+    return false;
+}
 
-class PhoneBook {
-private:
-    vector<Contact> contacts;
+// Функция для проверки, является ли символ согласной буквой (русской или английской)
+bool isConsonant(char c) {
+    c = tolower(c);
+    // Проверяем, является ли символ буквой
+    if (!isalpha(c)) {
+        return false;
+    }
+    // Если это не гласная, значит это согласная
+    return !isVowel(c);
+}
+
+// Функция для проверки, является ли символ цифрой
+bool isDigit(char c) {
+    return isdigit(static_cast<unsigned char>(c));
+}
+
+// Функция для сбора статистики по файлу
+bool analyzeFile(const string& inputFile, const string& outputFile) {
+    ifstream fin(inputFile);
+    ofstream fout(outputFile);
     
-    // Вспомогательная функция для поиска контакта по имени
-    int findByName(const string& name) {
-        for (size_t i = 0; i < contacts.size(); i++) {
-            if (contacts[i].name == name) {
-                return i;
+    // Проверка открытия файлов
+    if (!fin.is_open()) {
+        cerr << "Ошибка: не удалось открыть файл " << inputFile << endl;
+        return false;
+    }
+    
+    if (!fout.is_open()) {
+        cerr << "Ошибка: не удалось создать файл " << outputFile << endl;
+        fin.close();
+        return false;
+    }
+    
+    // Статистика
+    int totalChars = 0;
+    int totalLines = 0;
+    int vowelsCount = 0;
+    int consonantsCount = 0;
+    int digitsCount = 0;
+    
+    string line;
+    
+    // Чтение файла построчно
+    while (getline(fin, line)) {
+        totalLines++;
+        totalChars += line.length() + 1; // +1 для символа новой строки
+        
+        // Анализ символов в строке
+        for (char c : line) {
+            if (isVowel(c)) {
+                vowelsCount++;
+            } else if (isConsonant(c)) {
+                consonantsCount++;
+            } else if (isDigit(c)) {
+                digitsCount++;
             }
         }
-        return -1;
     }
     
-    // Вспомогательная функция для поиска контакта по номеру телефона
-    int findByPhone(const string& phone) {
-        for (size_t i = 0; i < contacts.size(); i++) {
-            if (contacts[i].phone == phone) {
-                return i;
-            }
-        }
-        return -1;
+    // Корректировка общего количества символов (последняя строка не имеет \n)
+    if (totalLines > 0 && !fin.eof()) {
+        totalChars--;
     }
     
-public:
-    // Добавление контакта
-    void addContact() {
-        Contact newContact;
-        cout << "Введите имя: ";
-        cin.ignore();
-        getline(cin, newContact.name);
-        
-        // Проверка на существование контакта с таким именем
-        if (findByName(newContact.name) != -1) {
-            cout << "Контакт с таким именем уже существует!\n";
-            return;
-        }
-        
-        cout << "Введите номер телефона: ";
-        getline(cin, newContact.phone);
-        
-        // Проверка на существование контакта с таким номером
-        if (findByPhone(newContact.phone) != -1) {
-            cout << "Контакт с таким номером телефона уже существует!\n";
-            return;
-        }
-        
-        contacts.push_back(newContact);
-        cout << "Контакт добавлен успешно!\n";
-    }
+    // Вывод статистики в консоль
+    cout << "\n=== СТАТИСТИКА ПО ФАЙЛУ " << inputFile << " ===\n";
+    cout << string(40, '-') << endl;
+    cout << left << setw(25) << "Количество символов:" << totalChars << endl;
+    cout << left << setw(25) << "Количество строк:" << totalLines << endl;
+    cout << left << setw(25) << "Количество гласных букв:" << vowelsCount << endl;
+    cout << left << setw(25) << "Количество согласных букв:" << consonantsCount << endl;
+    cout << left << setw(25) << "Количество цифр:" << digitsCount << endl;
     
-    // Поиск по имени
-    void searchByName() {
-        string name;
-        cout << "Введите имя для поиска: ";
-        cin.ignore();
-        getline(cin, name);
-        
-        int index = findByName(name);
-        if (index != -1) {
-            cout << "Контакт найден:\n";
-            cout << "Имя: " << contacts[index].name << endl;
-            cout << "Телефон: " << contacts[index].phone << endl;
-        } else {
-            cout << "Контакт с именем '" << name << "' не найден.\n";
-        }
-    }
+    // Запись статистики в выходной файл
+    fout << "=== СТАТИСТИКА ПО ФАЙЛУ " << inputFile << " ===\n";
+    fout << string(40, '-') << endl;
+    fout << left << setw(25) << "Количество символов:" << totalChars << endl;
+    fout << left << setw(25) << "Количество строк:" << totalLines << endl;
+    fout << left << setw(25) << "Количество гласных букв:" << vowelsCount << endl;
+    fout << left << setw(25) << "Количество согласных букв:" << consonantsCount << endl;
+    fout << left << setw(25) << "Количество цифр:" << digitsCount << endl;
+    fout << string(40, '-') << endl;
     
-    // Поиск по номеру телефона
-    void searchByPhone() {
-        string phone;
-        cout << "Введите номер телефона для поиска: ";
-        cin.ignore();
-        getline(cin, phone);
-        
-        int index = findByPhone(phone);
-        if (index != -1) {
-            cout << "Контакт найден:\n";
-            cout << "Имя: " << contacts[index].name << endl;
-            cout << "Телефон: " << contacts[index].phone << endl;
-        } else {
-            cout << "Контакт с номером '" << phone << "' не найден.\n";
-        }
-    }
+    // Дополнительная статистика
+    int lettersCount = vowelsCount + consonantsCount;
+    int otherChars = totalChars - lettersCount - digitsCount - totalLines + 1;
     
-    // Изменение данных контакта
-    void editContact() {
-        string name;
-        cout << "Введите имя контакта для изменения: ";
-        cin.ignore();
-        getline(cin, name);
-        
-        int index = findByName(name);
-        if (index == -1) {
-            cout << "Контакт не найден!\n";
-            return;
-        }
-        
-        cout << "Текущие данные:\n";
-        cout << "Имя: " << contacts[index].name << endl;
-        cout << "Телефон: " << contacts[index].phone << endl;
-        
-        cout << "\nВведите новое имя (или нажмите Enter для пропуска): ";
-        string newName;
-        getline(cin, newName);
-        
-        if (!newName.empty()) {
-            // Проверяем, не существует ли уже контакт с таким именем
-            int existingIndex = findByName(newName);
-            if (existingIndex != -1 && existingIndex != index) {
-                cout << "Контакт с таким именем уже существует!\n";
-                return;
-            }
-            contacts[index].name = newName;
-        }
-        
-        cout << "Введите новый номер телефона (или нажмите Enter для пропуска): ";
-        string newPhone;
-        getline(cin, newPhone);
-        
-        if (!newPhone.empty()) {
-            // Проверяем, не существует ли уже контакт с таким номером
-            int existingIndex = findByPhone(newPhone);
-            if (existingIndex != -1 && existingIndex != index) {
-                cout << "Контакт с таким номером телефона уже существует!\n";
-                return;
-            }
-            contacts[index].phone = newPhone;
-        }
-        
-        cout << "Данные контакта обновлены успешно!\n";
-    }
+    fout << left << setw(25) << "Всего букв:" << lettersCount << endl;
+    fout << left << setw(25) << "Других символов:" << otherChars << endl;
     
-    // Показать все контакты
-    void showAllContacts() {
-        if (contacts.empty()) {
-            cout << "Телефонная книга пуста.\n";
-            return;
-        }
-        
-        cout << "\n=== ТЕЛЕФОННАЯ КНИГА ===\n";
-        cout << setw(30) << left << "Имя" << "Телефон\n";
-        cout << string(50, '-') << endl;
-        
-        for (const auto& contact : contacts) {
-            cout << setw(30) << left << contact.name 
-                 << contact.phone << endl;
-        }
-    }
+    cout << "\nСтатистика сохранена в файл: " << outputFile << endl;
     
-    // Удаление контакта
-    void deleteContact() {
-        string name;
-        cout << "Введите имя контакта для удаления: ";
-        cin.ignore();
-        getline(cin, name);
-        
-        int index = findByName(name);
-        if (index == -1) {
-            cout << "Контакт не найден!\n";
-            return;
-        }
-        
-        contacts.erase(contacts.begin() + index);
-        cout << "Контакт удален успешно!\n";
+    fin.close();
+    fout.close();
+    return true;
+}
+
+void createTestFileForAnalysis() {
+    ofstream fout("text_for_analysis.txt");
+    
+    if (fout.is_open()) {
+        fout << "Это тестовый файл для анализа.\n";
+        fout << "Здесь содержится несколько строк текста.\n";
+        fout << "В тексте есть цифры: 12345 и 67890.\n";
+        fout << "А также английские слова: Hello World!\n";
+        fout << "И русские слова: Привет Мир!\n";
+        fout << "Последняя строка без точки в конце";
+        fout.close();
+        cout << "Создан тестовый файл: text_for_analysis.txt\n";
     }
-};
+}
 
 void task2() {
-    cout << "\n=== ЗАДАНИЕ 2: ТЕЛЕФОННАЯ КНИГА ===\n";
+    cout << "\n=== ЗАДАНИЕ 2: СТАТИСТИКА ПО ФАЙЛУ ===\n";
     
-    PhoneBook phoneBook;
     int choice;
+    cout << "1. Использовать тестовый файл\n";
+    cout << "2. Ввести имя файла вручную\n";
+    cout << "Выберите вариант: ";
+    cin >> choice;
+    cin.ignore(); // Очищаем буфер ввода
     
-    do {
-        cout << "\n=== МЕНЮ ТЕЛЕФОННОЙ КНИГИ ===\n";
-        cout << "1. Показать все контакты\n";
-        cout << "2. Добавить контакт\n";
-        cout << "3. Поиск по имени\n";
-        cout << "4. Поиск по номеру телефона\n";
-        cout << "5. Изменить контакт\n";
-        cout << "6. Удалить контакт\n";
-        cout << "0. Выход\n";
-        cout << "Выберите действие: ";
-        cin >> choice;
+    string inputFile, outputFile;
+    
+    if (choice == 1) {
+        createTestFileForAnalysis();
+        inputFile = "text_for_analysis.txt";
+        outputFile = "statistics.txt";
+    } else {
+        cout << "Введите имя анализируемого файла: ";
+        getline(cin, inputFile);
+        cout << "Введите имя файла для сохранения статистики: ";
+        getline(cin, outputFile);
+    }
+    
+    if (analyzeFile(inputFile, outputFile)) {
+        cout << "Анализ завершен успешно!\n";
         
-        switch (choice) {
-            case 1:
-                phoneBook.showAllContacts();
-                break;
-            case 2:
-                phoneBook.addContact();
-                break;
-            case 3:
-                phoneBook.searchByName();
-                break;
-            case 4:
-                phoneBook.searchByPhone();
-                break;
-            case 5:
-                phoneBook.editContact();
-                break;
-            case 6:
-                phoneBook.deleteContact();
-                break;
-            case 0:
-                cout << "Выход из телефонной книги...\n";
-                break;
-            default:
-                cout << "Неверный выбор! Попробуйте снова.\n";
+        // Показываем содержимое созданного файла со статистикой
+        cout << "\nСодержимое файла со статистикой:\n";
+        ifstream fin(outputFile);
+        if (fin.is_open()) {
+            string line;
+            while (getline(fin, line)) {
+                cout << line << endl;
+            }
+            fin.close();
         }
-    } while (choice != 0);
+    } else {
+        cout << "Ошибка при анализе файла!\n";
+    }
 }
 
 // ============================
@@ -306,8 +327,9 @@ int main() {
     
     do {
         cout << "\n=== ГЛАВНОЕ МЕНЮ ===\n";
-        cout << "1. Задание 1: Транспонирование матрицы\n";
-        cout << "2. Задание 2: Телефонная книга\n";
+        cout << "1. Задание 1: Сравнение строк двух файлов\n";
+        cout << "2. Задание 2: Статистика по файлу\n";
+        cout << "3. Выполнить оба задания (демо)\n";
         cout << "0. Выход из программы\n";
         cout << "Выберите задание: ";
         cin >> mainChoice;
@@ -318,6 +340,15 @@ int main() {
                 break;
             case 2:
                 task2();
+                break;
+            case 3:
+                cout << "\n=== ВЫПОЛНЕНИЕ ОБОИХ ЗАДАНИЙ ===\n";
+                createTestFiles();
+                createTestFileForAnalysis();
+                cout << "\n--- Задание 1 ---\n";
+                compareFiles("file1.txt", "file2.txt");
+                cout << "\n--- Задание 2 ---\n";
+                analyzeFile("text_for_analysis.txt", "statistics.txt");
                 break;
             case 0:
                 cout << "Программа завершена. До свидания!\n";
