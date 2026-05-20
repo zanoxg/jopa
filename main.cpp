@@ -1,754 +1,673 @@
 #include <iostream>
+#include <string>
+#include <cstring>
 #include <algorithm>
-#include <random>
-#include <chrono>
 
 using namespace std;
 
-// Шаблонная функция для поиска максимума в массиве
-template<typename T>
-T findMax(const T* arr, int size) {
-    if (size <= 0) {
-        throw invalid_argument("Массив пуст");
-    }
-    T maxVal = arr[0];
-    for (int i = 1; i < size; i++) {
-        if (arr[i] > maxVal) {
-            maxVal = arr[i];
-        }
-    }
-    return maxVal;
-}
+// Базовый класс с виртуальным наследованием
+class Pet {
+protected:
+    string name;
+    string species;
+    int age;
+    double weight;
 
-// Шаблонная функция для поиска минимума в массиве
-template<typename T>
-T findMin(const T* arr, int size) {
-    if (size <= 0) {
-        throw invalid_argument("Массив пуст");
-    }
-    T minVal = arr[0];
-    for (int i = 1; i < size; i++) {
-        if (arr[i] < minVal) {
-            minVal = arr[i];
-        }
-    }
-    return minVal;
-}
-
-// Шаблонная функция для сортировки массива (быстрая сортировка)
-template<typename T>
-void quickSort(T* arr, int left, int right) {
-    if (left >= right) return;
-    
-    T pivot = arr[(left + right) / 2];
-    int i = left, j = right;
-    
-    while (i <= j) {
-        while (arr[i] < pivot) i++;
-        while (arr[j] > pivot) j--;
-        if (i <= j) {
-            swap(arr[i], arr[j]);
-            i++;
-            j--;
-        }
-    }
-    
-    if (left < j) quickSort(arr, left, j);
-    if (i < right) quickSort(arr, i, right);
-}
-
-template<typename T>
-void sortArray(T* arr, int size) {
-    quickSort(arr, 0, size - 1);
-}
-
-// Шаблонная функция для двоичного поиска (массив должен быть отсортирован)
-template<typename T>
-int binarySearch(const T* arr, int size, const T& value) {
-    int left = 0, right = size - 1;
-    
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
-        
-        if (arr[mid] == value) {
-            return mid;
-        } else if (arr[mid] < value) {
-            left = mid + 1;
-        } else {
-            right = mid - 1;
-        }
-    }
-    
-    return -1; // не найдено
-}
-
-// Шаблонная функция для замены элемента массива
-template<typename T>
-void replaceElement(T* arr, int size, int index, const T& newValue) {
-    if (index < 0 || index >= size) {
-        throw out_of_range("Индекс вне границ массива");
-    }
-    arr[index] = newValue;
-}
-
-// Демонстрация работы шаблонных функций
-void demonstrateTemplateFunctions() {
-    cout << "========== ДЕМОНСТРАЦИЯ ШАБЛОННЫХ ФУНКЦИЙ ==========" << endl;
-    
-    // Тест с целыми числами
-    int intArr[] = {5, 2, 8, 1, 9, 3, 7, 4, 6};
-    int intSize = sizeof(intArr) / sizeof(intArr[0]);
-    
-    cout << "Исходный массив int: ";
-    for (int i = 0; i < intSize; i++) cout << intArr[i] << " ";
-    cout << endl;
-    
-    cout << "Максимум: " << findMax(intArr, intSize) << endl;
-    cout << "Минимум: " << findMin(intArr, intSize) << endl;
-    
-    sortArray(intArr, intSize);
-    cout << "Отсортированный массив: ";
-    for (int i = 0; i < intSize; i++) cout << intArr[i] << " ";
-    cout << endl;
-    
-    int searchVal = 7;
-    int pos = binarySearch(intArr, intSize, searchVal);
-    cout << "Поиск значения " << searchVal << ": " << (pos != -1 ? "найден на позиции " + to_string(pos) : "не найден") << endl;
-    
-    replaceElement(intArr, intSize, 2, 99);
-    cout << "После замены элемента 2 на 99: ";
-    for (int i = 0; i < intSize; i++) cout << intArr[i] << " ";
-    cout << endl;
-    
-    // Тест с числами с плавающей точкой
-    double doubleArr[] = {5.5, 2.2, 8.8, 1.1, 9.9};
-    int doubleSize = sizeof(doubleArr) / sizeof(doubleArr[0]);
-    
-    cout << "\nМассив double: ";
-    for (int i = 0; i < doubleSize; i++) cout << doubleArr[i] << " ";
-    cout << endl;
-    cout << "Максимум: " << findMax(doubleArr, doubleSize) << endl;
-    cout << "Минимум: " << findMin(doubleArr, doubleSize) << endl;
-}
-
-template<typename T>
-class Matrix {
-private:
-    T** data;
-    int rows;
-    int cols;
-    
 public:
-    // Конструкторы
-    Matrix(int r = 0, int c = 0) : rows(r), cols(c) {
-        if (rows > 0 && cols > 0) {
-            allocateMemory();
-        } else {
-            data = nullptr;
-        }
+    Pet(const string& n = "", const string& s = "", int a = 0, double w = 0.0)
+        : name(n), species(s), age(a), weight(w) {
+        cout << "Конструктор Pet: " << name << " (" << species << ")" << endl;
     }
-    
+
+    virtual ~Pet() {
+        cout << "Деструктор Pet: " << name << endl;
+    }
+
     // Конструктор копирования
-    Matrix(const Matrix& other) : rows(other.rows), cols(other.cols) {
-        allocateMemory();
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                data[i][j] = other.data[i][j];
-            }
-        }
+    Pet(const Pet& other)
+        : name(other.name), species(other.species), age(other.age), weight(other.weight) {
+        cout << "Конструктор копирования Pet: " << name << endl;
     }
-    
-    // Деструктор
-    ~Matrix() {
-        freeMemory();
-    }
-    
+
     // Оператор присваивания
-    Matrix& operator=(const Matrix& other) {
+    Pet& operator=(const Pet& other) {
         if (this != &other) {
-            freeMemory();
-            rows = other.rows;
-            cols = other.cols;
-            allocateMemory();
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    data[i][j] = other.data[i][j];
-                }
-            }
+            name = other.name;
+            species = other.species;
+            age = other.age;
+            weight = other.weight;
+            cout << "Оператор присваивания Pet" << endl;
         }
         return *this;
     }
-    
-    // Выделение памяти
-    void allocateMemory() {
-        data = new T*[rows];
-        for (int i = 0; i < rows; i++) {
-            data[i] = new T[cols];
+
+    // Виртуальные методы
+    virtual void makeSound() const = 0; // Чисто виртуальный метод
+    virtual void display() const {
+        cout << "Имя: " << name << ", Вид: " << species 
+             << ", Возраст: " << age << " лет, Вес: " << weight << " кг" << endl;
+    }
+
+    // Геттеры
+    string getName() const { return name; }
+    string getSpecies() const { return species; }
+    int getAge() const { return age; }
+    double getWeight() const { return weight; }
+};
+
+// Производный класс "Собака"
+class Dog : virtual public Pet {
+private:
+    string breed;      // Порода
+    bool isTrained;    // Дрессирована или нет
+
+public:
+    Dog(const string& n = "", int a = 0, double w = 0.0, const string& b = "", bool trained = false)
+        : Pet(n, "Собака", a, w), breed(b), isTrained(trained) {
+        cout << "Конструктор Dog: " << name << " (порода: " << breed << ")" << endl;
+    }
+
+    Dog(const Dog& other) : Pet(other), breed(other.breed), isTrained(other.isTrained) {
+        cout << "Конструктор копирования Dog" << endl;
+    }
+
+    ~Dog() override {
+        cout << "Деструктор Dog: " << name << endl;
+    }
+
+    void makeSound() const override {
+        cout << name << " говорит: Гав-гав!" << endl;
+    }
+
+    void display() const override {
+        Pet::display();
+        cout << "Порода: " << breed << ", Дрессирована: " << (isTrained ? "Да" : "Нет") << endl;
+    }
+
+    void fetch() const {
+        cout << name << " приносит палку!" << endl;
+    }
+};
+
+// Производный класс "Кошка"
+class Cat : virtual public Pet {
+private:
+    string color;      // Окрас
+    bool isIndoor;     // Домашняя или уличная
+
+public:
+    Cat(const string& n = "", int a = 0, double w = 0.0, const string& c = "", bool indoor = true)
+        : Pet(n, "Кошка", a, w), color(c), isIndoor(indoor) {
+        cout << "Конструктор Cat: " << name << " (окрас: " << color << ")" << endl;
+    }
+
+    Cat(const Cat& other) : Pet(other), color(other.color), isIndoor(other.isIndoor) {
+        cout << "Конструктор копирования Cat" << endl;
+    }
+
+    ~Cat() override {
+        cout << "Деструктор Cat: " << name << endl;
+    }
+
+    void makeSound() const override {
+        cout << name << " говорит: Мяу-мяу!" << endl;
+    }
+
+    void display() const override {
+        Pet::display();
+        cout << "Окрас: " << color << ", Домашняя: " << (isIndoor ? "Да" : "Нет") << endl;
+    }
+
+    void climb() const {
+        cout << name << " забирается на дерево!" << endl;
+    }
+};
+
+// Производный класс "Попугай"
+class Parrot : virtual public Pet {
+private:
+    string color;      // Окрас
+    bool canTalk;      // Умеет говорить
+
+public:
+    Parrot(const string& n = "", int a = 0, double w = 0.0, const string& c = "", bool talk = false)
+        : Pet(n, "Попугай", a, w), color(c), canTalk(talk) {
+        cout << "Конструктор Parrot: " << name << " (окрас: " << color << ")" << endl;
+    }
+
+    Parrot(const Parrot& other) : Pet(other), color(other.color), canTalk(other.canTalk) {
+        cout << "Конструктор копирования Parrot" << endl;
+    }
+
+    ~Parrot() override {
+        cout << "Деструктор Parrot: " << name << endl;
+    }
+
+    void makeSound() const override {
+        if (canTalk) {
+            cout << name << " говорит: Привет! Как дела?" << endl;
+        } else {
+            cout << name << " издаёт: Чирик-чирик!" << endl;
         }
     }
-    
-    // Очистка памяти
+
+    void display() const override {
+        Pet::display();
+        cout << "Окрас: " << color << ", Умеет говорить: " << (canTalk ? "Да" : "Нет") << endl;
+    }
+
+    void fly() const {
+        cout << name << " летает по комнате!" << endl;
+    }
+};
+
+// Базовый класс "Строка" с виртуальным наследованием
+class String {
+protected:
+    char* str;
+    size_t length;
+
+    void copyFrom(const char* s) {
+        if (s) {
+            length = strlen(s);
+            str = new char[length + 1];
+            strcpy(str, s);
+        } else {
+            str = nullptr;
+            length = 0;
+        }
+    }
+
     void freeMemory() {
-        if (data) {
-            for (int i = 0; i < rows; i++) {
-                delete[] data[i];
-            }
-            delete[] data;
-            data = nullptr;
+        delete[] str;
+        str = nullptr;
+        length = 0;
+    }
+
+public:
+    // 1) Конструктор без параметров
+    String() : str(nullptr), length(0) {
+        cout << "Конструктор String без параметров" << endl;
+        str = new char[1];
+        str[0] = '\0';
+    }
+
+    // 2) Конструктор, принимающий C-строку
+    String(const char* s) : str(nullptr), length(0) {
+        cout << "Конструктор String из C-строки: " << (s ? s : "null") << endl;
+        if (s) {
+            copyFrom(s);
+        } else {
+            str = new char[1];
+            str[0] = '\0';
         }
     }
-    
-    // Заполнение с клавиатуры
-    void fillFromKeyboard() {
-        cout << "Введите элементы матрицы " << rows << "x" << cols << ":" << endl;
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                cout << "[" << i << "][" << j << "]: ";
-                cin >> data[i][j];
-            }
-        }
+
+    // 3) Конструктор копирования
+    String(const String& other) : str(nullptr), length(0) {
+        cout << "Конструктор копирования String" << endl;
+        copyFrom(other.str);
     }
-    
-    // Заполнение случайными значениями
-    void fillRandom(T minVal, T maxVal) {
-        random_device rd;
-        mt19937 gen(rd());
+
+    // 4) Оператор присваивания
+    String& operator=(const String& other) {
+        cout << "Оператор присваивания String" << endl;
+        if (this != &other) {
+            freeMemory();
+            copyFrom(other.str);
+        }
+        return *this;
+    }
+
+    // 5) Получение длины строки
+    size_t getLength() const {
+        return length;
+    }
+
+    // 6) Очистка строки
+    void clear() {
+        freeMemory();
+        str = new char[1];
+        str[0] = '\0';
+        length = 0;
+    }
+
+    // 7) Деструктор
+    virtual ~String() {
+        cout << "Деструктор String" << endl;
+        freeMemory();
+    }
+
+    // 8) Конкатенация строк (операторы + и +=)
+    String operator+(const String& other) const {
+        String result;
+        delete[] result.str;
         
-        if constexpr (is_integral<T>::value) {
-            uniform_int_distribution<T> dist(minVal, maxVal);
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    data[i][j] = dist(gen);
-                }
-            }
-        } else if constexpr (is_floating_point<T>::value) {
-            uniform_real_distribution<T> dist(minVal, maxVal);
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    data[i][j] = dist(gen);
-                }
-            }
-        }
-    }
-    
-    // Отображение матрицы
-    void display() const {
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                cout << data[i][j] << "\t";
-            }
-            cout << endl;
-        }
-    }
-    
-    // Арифметические операторы
-    Matrix operator+(const Matrix& other) const {
-        if (rows != other.rows || cols != other.cols) {
-            throw invalid_argument("Размеры матриц не совпадают");
-        }
+        result.length = length + other.length;
+        result.str = new char[result.length + 1];
         
-        Matrix result(rows, cols);
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                result.data[i][j] = data[i][j] + other.data[i][j];
-            }
-        }
+        strcpy(result.str, str);
+        strcat(result.str, other.str);
+        
         return result;
     }
-    
-    Matrix operator-(const Matrix& other) const {
-        if (rows != other.rows || cols != other.cols) {
-            throw invalid_argument("Размеры матриц не совпадают");
-        }
-        
-        Matrix result(rows, cols);
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                result.data[i][j] = data[i][j] - other.data[i][j];
-            }
-        }
-        return result;
-    }
-    
-    Matrix operator*(const Matrix& other) const {
-        if (cols != other.rows) {
-            throw invalid_argument("Количество столбцов первой матрицы не равно количеству строк второй");
-        }
-        
-        Matrix result(rows, other.cols);
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < other.cols; j++) {
-                result.data[i][j] = 0;
-                for (int k = 0; k < cols; k++) {
-                    result.data[i][j] += data[i][k] * other.data[k][j];
-                }
-            }
-        }
-        return result;
-    }
-    
-    // Умножение на скаляр
-    Matrix operator*(T scalar) const {
-        Matrix result(rows, cols);
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                result.data[i][j] = data[i][j] * scalar;
-            }
-        }
-        return result;
-    }
-    
-    // Составные операторы
-    Matrix& operator+=(const Matrix& other) {
+
+    String& operator+=(const String& other) {
         *this = *this + other;
         return *this;
     }
-    
-    Matrix& operator-=(const Matrix& other) {
-        *this = *this - other;
-        return *this;
+
+    // 9) Проверка на равенство и неравенство
+    bool operator==(const String& other) const {
+        return strcmp(str, other.str) == 0;
     }
-    
-    Matrix& operator*=(const Matrix& other) {
-        *this = *this * other;
-        return *this;
+
+    bool operator!=(const String& other) const {
+        return !(*this == other);
     }
-    
-    // Доступ к элементам
-    T& operator()(int i, int j) {
-        if (i < 0 || i >= rows || j < 0 || j >= cols) {
-            throw out_of_range("Индекс вне границ матрицы");
-        }
-        return data[i][j];
+
+    // Дополнительные методы
+    const char* c_str() const {
+        return str;
     }
-    
-    const T& operator()(int i, int j) const {
-        if (i < 0 || i >= rows || j < 0 || j >= cols) {
-            throw out_of_range("Индекс вне границ матрицы");
-        }
-        return data[i][j];
+
+    virtual void display() const {
+        cout << "Строка: \"" << (str ? str : "") << "\", Длина: " << length << endl;
     }
-    
-    // Геттеры
-    int getRows() const { return rows; }
-    int getCols() const { return cols; }
-    
-    // Транспонирование
-    Matrix transpose() const {
-        Matrix result(cols, rows);
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                result.data[j][i] = data[i][j];
+};
+
+// Производный класс "Битовая строка"
+class BitString : virtual public String {
+private:
+    bool isValidBitString(const char* s) const {
+        if (!s) return false;
+        for (size_t i = 0; i < strlen(s); i++) {
+            if (s[i] != '0' && s[i] != '1') {
+                return false;
             }
         }
+        return true;
+    }
+
+    long long toInteger() const {
+        if (length == 0) return 0;
+        
+        // Проверка на знак (первый бит - знаковый)
+        bool isNegative = (str[0] == '1');
+        long long value = 0;
+        
+        for (size_t i = 1; i < length; i++) {
+            value = (value << 1) | (str[i] - '0');
+        }
+        
+        if (isNegative) {
+            // Преобразование из дополнительного кода
+            value = -(value + 1);
+        }
+        
+        return value;
+    }
+
+    void fromInteger(long long num, size_t bits) {
+        freeMemory();
+        length = bits;
+        str = new char[length + 1];
+        
+        bool isNegative = (num < 0);
+        if (isNegative) {
+            num = -num - 1;
+        }
+        
+        // Заполняем биты с конца
+        for (int i = length - 1; i >= 0; i--) {
+            str[i] = (num & 1) ? '1' : '0';
+            num >>= 1;
+        }
+        
+        if (isNegative) {
+            // Инвертируем все биты (дополнительный код уже учтен)
+            for (size_t i = 0; i < length; i++) {
+                str[i] = (str[i] == '0') ? '1' : '0';
+            }
+        }
+        
+        str[length] = '\0';
+    }
+
+public:
+    // 1) Конструктор без параметров
+    BitString() : String() {
+        cout << "Конструктор BitString без параметров" << endl;
+    }
+
+    // 2) Конструктор, принимающий C-строку
+    BitString(const char* s) : String() {
+        cout << "Конструктор BitString из C-строки: " << (s ? s : "null") << endl;
+        if (s && isValidBitString(s)) {
+            freeMemory();
+            copyFrom(s);
+        } else {
+            // Если строка содержит недопустимые символы, делаем её пустой
+            clear();
+            cout << "Предупреждение: битовая строка содержит недопустимые символы, создана пустая строка" << endl;
+        }
+    }
+
+    // 3) Конструктор копирования
+    BitString(const BitString& other) : String(other) {
+        cout << "Конструктор копирования BitString" << endl;
+    }
+
+    // 4) Оператор присваивания
+    BitString& operator=(const BitString& other) {
+        cout << "Оператор присваивания BitString" << endl;
+        if (this != &other) {
+            String::operator=(other);
+        }
+        return *this;
+    }
+
+    // 5) Деструктор
+    ~BitString() override {
+        cout << "Деструктор BitString" << endl;
+    }
+
+    // 6) Изменение знака числа (перевод в дополнительный код)
+    void changeSign() {
+        if (length == 0) return;
+        
+        // Инвертируем все биты
+        for (size_t i = 0; i < length; i++) {
+            str[i] = (str[i] == '0') ? '1' : '0';
+        }
+        
+        // Прибавляем 1
+        int carry = 1;
+        for (int i = length - 1; i >= 0 && carry; i--) {
+            if (str[i] == '0') {
+                str[i] = '1';
+                carry = 0;
+            } else {
+                str[i] = '0';
+            }
+        }
+    }
+
+    // 7) Сложение битовых строк (оператор +)
+    BitString operator+(const BitString& other) const {
+        long long num1 = toInteger();
+        long long num2 = other.toInteger();
+        long long sum = num1 + num2;
+        
+        BitString result;
+        result.fromInteger(sum, max(length, other.length) + 1);
         return result;
     }
+
+    // 8) Проверка на равенство и неравенство
+    bool operator==(const BitString& other) const {
+        return String::operator==(other);
+    }
+
+    bool operator!=(const BitString& other) const {
+        return String::operator!=(other);
+    }
+
+    // Дополнительные методы
+    void display() const override {
+        cout << "Битовая строка: \"" << (str ? str : "") 
+             << "\", Длина: " << length 
+             << ", Значение: " << toInteger() << endl;
+    }
+
+    long long getValue() const {
+        return toInteger();
+    }
 };
 
-// Демонстрация работы матрицы
-void demonstrateMatrix() {
-    cout << "\n========== ДЕМОНСТРАЦИЯ ШАБЛОННОГО КЛАССА МАТРИЦА ==========" << endl;
-    
-    Matrix<int> m1(2, 3);
-    Matrix<int> m2(2, 3);
-    
-    cout << "Матрица 1 (случайные числа от 1 до 10):" << endl;
-    m1.fillRandom(1, 10);
-    m1.display();
-    
-    cout << "\nМатрица 2 (случайные числа от 1 до 10):" << endl;
-    m2.fillRandom(1, 10);
-    m2.display();
-    
-    cout << "\nСумма матриц:" << endl;
-    Matrix<int> sum = m1 + m2;
-    sum.display();
-    
-    cout << "\nРазность матриц:" << endl;
-    Matrix<int> diff = m1 - m2;
-    diff.display();
-    
-    Matrix<int> m3(3, 2);
-    m3.fillRandom(1, 5);
-    cout << "\nМатрица 3 (3x2):" << endl;
-    m3.display();
-    
-    cout << "\nПроизведение m1(2x3) * m3(3x2):" << endl;
-    Matrix<int> product = m1 * m3;
-    product.display();
-    
-    cout << "\nТранспонированная матрица m1:" << endl;
-    Matrix<int> trans = m1.transpose();
-    trans.display();
-}
+// Базовый шаблонный класс base
+template<typename T1, typename T2>
+class Base {
+protected:
+    T1 value1;
+    T2 value2;
 
-#include <stack>
-
-class Stack {
-private:
-    struct Node {
-        char data;
-        Node* next;
-        Node(char val) : data(val), next(nullptr) {}
-    };
-    Node* top;
-    
 public:
-    Stack() : top(nullptr) {}
-    
-    ~Stack() {
-        while (!isEmpty()) {
-            pop();
+    // Конструкторы
+    Base() : value1(T1()), value2(T2()) {
+        cout << "Конструктор Base (по умолчанию)" << endl;
+    }
+
+    Base(const T1& v1, const T2& v2) : value1(v1), value2(v2) {
+        cout << "Конструктор Base с параметрами: " << value1 << ", " << value2 << endl;
+    }
+
+    // Конструктор копирования
+    Base(const Base& other) : value1(other.value1), value2(other.value2) {
+        cout << "Конструктор копирования Base" << endl;
+    }
+
+    // Деструктор
+    virtual ~Base() {
+        cout << "Деструктор Base" << endl;
+    }
+
+    // Оператор присваивания
+    Base& operator=(const Base& other) {
+        if (this != &other) {
+            value1 = other.value1;
+            value2 = other.value2;
+            cout << "Оператор присваивания Base" << endl;
         }
+        return *this;
     }
-    
-    void push(char value) {
-        Node* newNode = new Node(value);
-        newNode->next = top;
-        top = newNode;
-    }
-    
-    void pop() {
-        if (!isEmpty()) {
-            Node* temp = top;
-            top = top->next;
-            delete temp;
-        }
-    }
-    
-    char peek() const {
-        if (!isEmpty()) {
-            return top->data;
-        }
-        return '\0';
-    }
-    
-    bool isEmpty() const {
-        return top == nullptr;
+
+    // Методы доступа
+    T1 getValue1() const { return value1; }
+    T2 getValue2() const { return value2; }
+    void setValue1(const T1& v) { value1 = v; }
+    void setValue2(const T2& v) { value2 = v; }
+
+    virtual void display() const {
+        cout << "Base: value1 = " << value1 << ", value2 = " << value2 << endl;
     }
 };
 
-class BracketChecker {
-private:
-    string checkBrackets(const string& str) {
-        Stack stack;
-        
-        for (size_t i = 0; i < str.length(); i++) {
-            char ch = str[i];
-            
-            // Если открывающая скобка - добавляем в стек
-            if (ch == '(' || ch == '[' || ch == '{') {
-                stack.push(ch);
-            }
-            // Если закрывающая скобка - проверяем
-            else if (ch == ')' || ch == ']' || ch == '}') {
-                if (stack.isEmpty()) {
-                    return "Ошибка: закрывающая скобка без соответствующей открывающей на позиции " + to_string(i);
-                }
-                
-                char openBracket = stack.peek();
-                bool isMatch = false;
-                
-                if ((openBracket == '(' && ch == ')') ||
-                    (openBracket == '[' && ch == ']') ||
-                    (openBracket == '{' && ch == '}')) {
-                    isMatch = true;
-                }
-                
-                if (!isMatch) {
-                    return "Ошибка: несоответствие типов скобок на позиции " + to_string(i);
-                }
-                
-                stack.pop();
-            }
-        }
-        
-        if (!stack.isEmpty()) {
-            return "Ошибка: остались незакрытые скобки. Открывающая скобка '" + 
-                   string(1, stack.peek()) + "' не имеет пары.";
-        }
-        
-        return "Строка корректна";
-    }
-    
+// Потомок child
+template<typename T1, typename T2, typename T3, typename T4>
+class Child : public Base<T1, T2> {
+protected:
+    T3 value3;
+    T4 value4;
+
 public:
-    void processString(const string& str) {
-        cout << "Проверяемая строка: " << str << endl;
-        string result = checkBrackets(str);
-        cout << "Результат: " << result << endl;
-        
-        if (result != "Строка корректна") {
-            cout << "Строка до места ошибки: " << result.substr(0, result.find("Ошибка")) << endl;
+    // Конструкторы
+    Child() : Base<T1, T2>(), value3(T3()), value4(T4()) {
+        cout << "Конструктор Child (по умолчанию)" << endl;
+    }
+
+    Child(const T1& v1, const T2& v2, const T3& v3, const T4& v4)
+        : Base<T1, T2>(v1, v2), value3(v3), value4(v4) {
+        cout << "Конструктор Child с параметрами" << endl;
+    }
+
+    // Конструктор копирования
+    Child(const Child& other) : Base<T1, T2>(other), value3(other.value3), value4(other.value4) {
+        cout << "Конструктор копирования Child" << endl;
+    }
+
+    // Деструктор
+    ~Child() override {
+        cout << "Деструктор Child" << endl;
+    }
+
+    // Оператор присваивания
+    Child& operator=(const Child& other) {
+        if (this != &other) {
+            Base<T1, T2>::operator=(other);
+            value3 = other.value3;
+            value4 = other.value4;
+            cout << "Оператор присваивания Child" << endl;
         }
+        return *this;
+    }
+
+    // Методы доступа
+    T3 getValue3() const { return value3; }
+    T4 getValue4() const { return value4; }
+    void setValue3(const T3& v) { value3 = v; }
+    void setValue4(const T4& v) { value4 = v; }
+
+    void display() const override {
+        Base<T1, T2>::display();
+        cout << "Child: value3 = " << value3 << ", value4 = " << value4 << endl;
     }
 };
 
-void demonstrateBracketChecking() {
-    cout << "\n========== ПРОВЕРКА СКОБОК ==========" << endl;
-    
-    BracketChecker checker;
-    
-    string correctStr = "({x-y-z}*[x+2y]-(z+4x))";
-    cout << "\nПравильная строка:" << endl;
-    checker.processString(correctStr);
-    
-    string incorrectStr = "([x-y-z}*[x+2y)-{z+4x)]";
-    cout << "\nНеправильная строка:" << endl;
-    checker.processString(incorrectStr);
-    
-    string missingBracket = "({x+y}*[z-w]";
-    cout << "\nСтрока с незакрытой скобкой:" << endl;
-    checker.processString(missingBracket);
-    
-    string wrongOrder = "([)]";
-    cout << "\nСтрока с неправильным порядком:" << endl;
-    checker.processString(wrongOrder);
-}
-
-#include <queue>
-#include <vector>
-#include <map>
-#include <ctime>
-
-// Задание 4.1: Остановка маршрутных такси
-class BusStopSimulation {
+// Потомок child2
+template<typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+class Child2 : public Child<T1, T2, T3, T4> {
 private:
-    struct Passenger {
-        double arrivalTime;
-        double waitTime;
-        Passenger(double t) : arrivalTime(t), waitTime(0) {}
-    };
-    
-    struct Minibus {
-        int freeSeats;
-        double arrivalTime;
-        Minibus(double t, int seats) : arrivalTime(t), freeSeats(seats) {}
-    };
-    
-    double avgPassengerInterval;  // среднее время между появлениями пассажиров
-    double avgMinibusInterval;    // среднее время между появлениями маршруток
-    bool isTerminal;              // тип остановки (конечная или нет)
-    int maxAllowedPeople;         // максимально допустимое количество людей на остановке
-    
+    T5 value5;
+    T6 value6;
+
 public:
-    BusStopSimulation(double passInterval, double busInterval, bool terminal, int maxPeople)
-        : avgPassengerInterval(passInterval), avgMinibusInterval(busInterval),
-          isTerminal(terminal), maxAllowedPeople(maxPeople) {}
-    
-    void run(double simulationTime) {
-        vector<Passenger> passengers;
-        vector<Minibus> minibuses;
-        
-        random_device rd;
-        mt19937 gen(rd());
-        exponential_distribution<> passDist(1.0 / avgPassengerInterval);
-        exponential_distribution<> busDist(1.0 / avgMinibusInterval);
-        uniform_int_distribution<> seatsDist(5, 15); // от 5 до 15 свободных мест
-        
-        double currentTime = 0;
-        double nextPassenger = passDist(gen);
-        double nextMinibus = busDist(gen);
-        
-        cout << "\nЗапуск симуляции остановки маршрутных такси..." << endl;
-        cout << "Тип остановки: " << (isTerminal ? "Конечная" : "Промежуточная") << endl;
-        cout << "Максимально допустимое количество людей: " << maxAllowedPeople << endl;
-        
-        while (currentTime < simulationTime) {
-            if (nextPassenger < nextMinibus) {
-                // Прибытие пассажира
-                currentTime = nextPassenger;
-                passengers.push_back(Passenger(currentTime));
-                nextPassenger += passDist(gen);
-                
-                if (passengers.size() > maxAllowedPeople) {
-                    cout << "Предупреждение на " << currentTime << " мин: на остановке "
-                         << passengers.size() << " человек (превышение допустимого)!" << endl;
-                }
-            } else {
-                // Прибытие маршрутки
-                currentTime = nextMinibus;
-                int freeSeats = seatsDist(gen);
-                minibuses.push_back(Minibus(currentTime, freeSeats));
-                
-                // Посадка пассажиров
-                int boarded = min(freeSeats, (int)passengers.size());
-                for (int i = 0; i < boarded; i++) {
-                    passengers[i].waitTime = currentTime - passengers[i].arrivalTime;
-                }
-                passengers.erase(passengers.begin(), passengers.begin() + boarded);
-                
-                nextMinibus += busDist(gen);
-            }
+    // Конструкторы
+    Child2() : Child<T1, T2, T3, T4>(), value5(T5()), value6(T6()) {
+        cout << "Конструктор Child2 (по умолчанию)" << endl;
+    }
+
+    Child2(const T1& v1, const T2& v2, const T3& v3, const T4& v4, const T5& v5, const T6& v6)
+        : Child<T1, T2, T3, T4>(v1, v2, v3, v4), value5(v5), value6(v6) {
+        cout << "Конструктор Child2 с параметрами" << endl;
+    }
+
+    // Конструктор копирования
+    Child2(const Child2& other) 
+        : Child<T1, T2, T3, T4>(other), value5(other.value5), value6(other.value6) {
+        cout << "Конструктор копирования Child2" << endl;
+    }
+
+    // Деструктор
+    ~Child2() override {
+        cout << "Деструктор Child2" << endl;
+    }
+
+    // Оператор присваивания
+    Child2& operator=(const Child2& other) {
+        if (this != &other) {
+            Child<T1, T2, T3, T4>::operator=(other);
+            value5 = other.value5;
+            value6 = other.value6;
+            cout << "Оператор присваивания Child2" << endl;
         }
-        
-        // Статистика
-        double totalWaitTime = 0;
-        for (const auto& p : passengers) {
-            totalWaitTime += p.waitTime;
-        }
-        double avgWaitTime = passengers.empty() ? 0 : totalWaitTime / passengers.size();
-        
-        cout << "\n=== РЕЗУЛЬТАТЫ СИМУЛЯЦИИ ===" << endl;
-        cout << "Всего обслужено пассажиров: " << passengers.size() << endl;
-        cout << "Среднее время ожидания: " << avgWaitTime << " мин" << endl;
-        cout << "Количество прибывших маршруток: " << minibuses.size() << endl;
-        cout << "Средний интервал между маршрутками: " << avgMinibusInterval << " мин" << endl;
+        return *this;
+    }
+
+    // Методы доступа
+    T5 getValue5() const { return value5; }
+    T6 getValue6() const { return value6; }
+    void setValue5(const T5& v) { value5 = v; }
+    void setValue6(const T6& v) { value6 = v; }
+
+    void display() const override {
+        Child<T1, T2, T3, T4>::display();
+        cout << "Child2: value5 = " << value5 << ", value6 = " << value6 << endl;
     }
 };
-
-// Задание 4.2: Очередь печати принтера
-class PrintQueue {
-private:
-    struct PrintJob {
-        string userName;
-        int priority;      // 1 - наивысший, 5 - наинизший
-        time_t requestTime;
-        time_t completionTime;
-        
-        PrintJob(const string& name, int prio) 
-            : userName(name), priority(prio) {
-            requestTime = time(nullptr);
-            completionTime = 0;
-        }
-        
-        bool operator<(const PrintJob& other) const {
-            return priority > other.priority; // Для приоритетной очереди (чем меньше число, тем выше приоритет)
-        }
-    };
-    
-    struct CompletedJob {
-        string userName;
-        time_t completionTime;
-        
-        CompletedJob(const string& name, time_t time) 
-            : userName(name), completionTime(time) {}
-    };
-    
-    priority_queue<PrintJob> queue;      // Очередь печати
-    queue<CompletedJob> statistics;       // Очередь статистики
-    
-public:
-    void addJob(const string& userName, int priority) {
-        if (priority < 1) priority = 1;
-        if (priority > 5) priority = 5;
-        
-        PrintJob job(userName, priority);
-        queue.push(job);
-        
-        cout << "Добавлена задача печати для " << userName 
-             << " (приоритет: " << priority << ")" << endl;
-    }
-    
-    void processNextJob() {
-        if (queue.empty()) {
-            cout << "Нет задач в очереди печати" << endl;
-            return;
-        }
-        
-        PrintJob job = queue.top();
-        queue.pop();
-        
-        job.completionTime = time(nullptr);
-        statistics.push(CompletedJob(job.userName, job.completionTime));
-        
-        cout << "Печать завершена для " << job.userName 
-             << " (приоритет: " << job.priority 
-             << ", время ожидания: " << (job.completionTime - job.requestTime) << " сек)" << endl;
-    }
-    
-    void showStatistics() {
-        cout << "\n=== СТАТИСТИКА ПЕЧАТИ ===" << endl;
-        queue<CompletedJob> temp = statistics;
-        
-        if (temp.empty()) {
-            cout << "Нет завершенных задач" << endl;
-            return;
-        }
-        
-        int jobNumber = 1;
-        while (!temp.empty()) {
-            CompletedJob job = temp.front();
-            temp.pop();
-            
-            char* timeStr = ctime(&job.completionTime);
-            timeStr[strlen(timeStr) - 1] = '\0'; // Удаляем символ новой строки
-            
-            cout << jobNumber++ << ". Пользователь: " << job.userName 
-                 << ", время завершения: " << timeStr << endl;
-        }
-    }
-    
-    void showQueue() {
-        if (queue.empty()) {
-            cout << "Очередь печати пуста" << endl;
-            return;
-        }
-        
-        cout << "\n=== ТЕКУЩАЯ ОЧЕРЕДЬ ПЕЧАТИ ===" << endl;
-        priority_queue<PrintJob> temp = queue;
-        
-        while (!temp.empty()) {
-            PrintJob job = temp.top();
-            temp.pop();
-            cout << "Пользователь: " << job.userName 
-                 << ", приоритет: " << job.priority 
-                 << ", время запроса: " << ctime(&job.requestTime);
-        }
-    }
-    
-    bool isEmpty() const {
-        return queue.empty();
-    }
-};
-
-void demonstratePrintQueue() {
-    cout << "\n========== ИМИТАЦИЯ ОЧЕРЕДИ ПЕЧАТИ ПРИНТЕРА ==========" << endl;
-    
-    PrintQueue printer;
-    
-    // Добавление задач с разными приоритетами
-    printer.addJob("Иван", 3);
-    printer.addJob("Мария", 1);  // Высокий приоритет
-    printer.addJob("Петр", 5);
-    printer.addJob("Анна", 2);
-    
-    printer.showQueue();
-    
-    // Обработка задач
-    cout << "\n--- Обработка задач ---" << endl;
-    while (!printer.isEmpty()) {
-        printer.processNextJob();
-        // Небольшая задержка для имитации
-        this_thread::sleep_for(chrono::seconds(1));
-    }
-    
-    printer.showStatistics();
-}
-
-void demonstrateBusStop() {
-    cout << "\n========== ИМИТАЦИЯ ОСТАНОВКИ МАРШРУТНЫХ ТАКСИ ==========" << endl;
-    
-    // Параметры: средний интервал пассажиров, средний интервал маршруток,
-    // тип остановки, максимальное количество людей
-    BusStopSimulation stop(2.0, 5.0, false, 20);
-    stop.run(60); // Симуляция на 60 минут
-}
 
 int main() {
-    // Задание 1: Шаблонные функции
-    demonstrateTemplateFunctions();
+    cout << "========== ТЕСТИРОВАНИЕ ДОМАШНИХ ЖИВОТНЫХ ==========" << endl;
     
-    // Задание 2: Шаблонный класс Матрица
-    demonstrateMatrix();
+    // Создание объектов
+    Dog dog("Рекс", 3, 25.5, "Немецкая овчарка", true);
+    Cat cat("Мурка", 2, 4.2, "Рыжий", true);
+    Parrot parrot("Кеша", 5, 0.5, "Зелёный", true);
     
-    // Задание 3: Проверка скобок
-    demonstrateBracketChecking();
+    cout << "\n--- Информация о животных ---" << endl;
+    dog.display();
+    dog.makeSound();
+    dog.fetch();
     
-    // Задание 4.1: Остановка маршрутных такси
-    demonstrateBusStop();
+    cout << endl;
+    cat.display();
+    cat.makeSound();
+    cat.climb();
     
-    // Задание 4.2: Очередь печати
-    demonstratePrintQueue();
+    cout << endl;
+    parrot.display();
+    parrot.makeSound();
+    parrot.fly();
+    
+    // Массив указателей на базовый класс для демонстрации полиморфизма
+    cout << "\n--- Полиморфизм ---" << endl;
+    Pet* pets[] = {&dog, &cat, &parrot};
+    for (int i = 0; i < 3; i++) {
+        pets[i]->makeSound();
+    }
+    
+    cout << "\n========== ТЕСТИРОВАНИЕ СТРОК И БИТОВЫХ СТРОК ==========" << endl;
+    
+    // Тестирование класса String
+    String s1("Hello");
+    String s2(" World");
+    String s3 = s1 + s2;
+    
+    cout << "s1: " << s1.c_str() << ", длина: " << s1.getLength() << endl;
+    cout << "s2: " << s2.c_str() << ", длина: " << s2.getLength() << endl;
+    cout << "s3 = s1 + s2: " << s3.c_str() << ", длина: " << s3.getLength() << endl;
+    
+    s1 += s2;
+    cout << "s1 += s2: " << s1.c_str() << endl;
+    
+    cout << "s1 == s3? " << (s1 == s3 ? "Да" : "Нет") << endl;
+    
+    // Тестирование класса BitString
+    BitString bs1("1010");  // 10 в десятичной (если 4 бита)
+    BitString bs2("0101");  // 5 в десятичной
+    
+    cout << "\nБитовые строки:" << endl;
+    bs1.display();
+    bs2.display();
+    
+    BitString bs3 = bs1 + bs2;
+    cout << "bs1 + bs2 = ";
+    bs3.display();
+    
+    cout << "\nТестирование с недопустимыми символами:" << endl;
+    BitString bs4("1023");
+    bs4.display();
+    
+    cout << "\nИзменение знака:" << endl;
+    BitString bs5("0011"); // 3
+    bs5.display();
+    bs5.changeSign();
+    cout << "После изменения знака: ";
+    bs5.display();
+    
+    cout << "\n========== ТЕСТИРОВАНИЕ ШАБЛОННОГО НАСЛЕДОВАНИЯ ==========" << endl;
+    
+    // Тестирование Base
+    Base<int, double> base1(10, 3.14);
+    base1.display();
+    
+    // Тестирование Child
+    Child<int, double, string, char> child1(5, 2.71, "Hello", 'A');
+    child1.display();
+    
+    // Тестирование Child2
+    Child2<int, double, string, char, float, bool> child2(
+        1, 1.414, "World", 'B', 3.14159f, true
+    );
+    child2.display();
+    
+    // Демонстрация копирования
+    cout << "\n--- Демонстрация копирования ---" << endl;
+    Child2<int, double, string, char, float, bool> child3 = child2;
+    child3.display();
+    
+    cout << "\n========== ВИРТУАЛЬНОЕ НАСЛЕДОВАНИЕ ==========" << endl;
+    // Виртуальное наследование уже реализовано в классах Pet и String
     
     return 0;
 }
