@@ -1,747 +1,1073 @@
 #include <iostream>
-#include <fstream>
-#include <vector>
 #include <string>
-#include <algorithm>
-#include <iomanip>
-#include <sstream>
+#include <exception>
+#include <stdexcept>
+#include <memory>
 
 using namespace std;
 
-class Directory {
-private:
-    struct Entry {
-        string companyName;   // Название фирмы
-        string owner;         // Владелец
-        string phone;         // Телефон
-        string address;       // Адрес
-        string activity;      // Род деятельности
-        
-        // Метод для преобразования в строку для сохранения
-        string toString() const {
-            return companyName + "|" + owner + "|" + phone + "|" + address + "|" + activity;
-        }
-        
-        // Метод для загрузки из строки
-        static Entry fromString(const string& str) {
-            Entry entry;
-            stringstream ss(str);
-            getline(ss, entry.companyName, '|');
-            getline(ss, entry.owner, '|');
-            getline(ss, entry.phone, '|');
-            getline(ss, entry.address, '|');
-            getline(ss, entry.activity);
-            return entry;
-        }
-        
-        // Вывод записи в консоль
-        void display() const {
-            cout << left << setw(25) << companyName 
-                 << setw(20) << owner 
-                 << setw(15) << phone 
-                 << setw(30) << address 
-                 << setw(20) << activity << endl;
-        }
-    };
-    
-    vector<Entry> entries;
-    string filename;
-    
-    // Загрузка данных из файла
-    void loadFromFile() {
-        ifstream file(filename);
-        if (!file.is_open()) return;
-        
-        entries.clear();
-        string line;
-        while (getline(file, line)) {
-            if (!line.empty()) {
-                entries.push_back(Entry::fromString(line));
-            }
-        }
-        file.close();
-    }
-    
-    // Сохранение данных в файл
-    void saveToFile() const {
-        ofstream file(filename);
-        if (!file.is_open()) {
-            cerr << "Ошибка: не удалось открыть файл для записи!" << endl;
-            return;
-        }
-        
-        for (const auto& entry : entries) {
-            file << entry.toString() << endl;
-        }
-        file.close();
-    }
-    
+// Пользовательские исключения для списка
+class ListException : public exception {
+protected:
+    string message;
 public:
-    Directory(const string& fname = "directory.txt") : filename(fname) {
-        loadFromFile();
-    }
-    
-    ~Directory() {
-        saveToFile();
-    }
-    
-    // Добавление новой записи
-    void addEntry() {
-        Entry newEntry;
-        cin.ignore();
-        
-        cout << "Введите название фирмы: ";
-        getline(cin, newEntry.companyName);
-        
-        cout << "Введите владельца: ";
-        getline(cin, newEntry.owner);
-        
-        cout << "Введите телефон: ";
-        getline(cin, newEntry.phone);
-        
-        cout << "Введите адрес: ";
-        getline(cin, newEntry.address);
-        
-        cout << "Введите род деятельности: ";
-        getline(cin, newEntry.activity);
-        
-        entries.push_back(newEntry);
-        saveToFile();
-        cout << "\nЗапись успешно добавлена!" << endl;
-    }
-    
-    // Поиск по названию
-    vector<Entry> searchByName(const string& name) const {
-        vector<Entry> results;
-        for (const auto& entry : entries) {
-            if (toLowerCase(entry.companyName).find(toLowerCase(name)) != string::npos) {
-                results.push_back(entry);
-            }
-        }
-        return results;
-    }
-    
-    // Поиск по владельцу
-    vector<Entry> searchByOwner(const string& owner) const {
-        vector<Entry> results;
-        for (const auto& entry : entries) {
-            if (toLowerCase(entry.owner).find(toLowerCase(owner)) != string::npos) {
-                results.push_back(entry);
-            }
-        }
-        return results;
-    }
-    
-    // Поиск по телефону
-    vector<Entry> searchByPhone(const string& phone) const {
-        vector<Entry> results;
-        for (const auto& entry : entries) {
-            if (entry.phone.find(phone) != string::npos) {
-                results.push_back(entry);
-            }
-        }
-        return results;
-    }
-    
-    // Поиск по роду деятельности
-    vector<Entry> searchByActivity(const string& activity) const {
-        vector<Entry> results;
-        for (const auto& entry : entries) {
-            if (toLowerCase(entry.activity).find(toLowerCase(activity)) != string::npos) {
-                results.push_back(entry);
-            }
-        }
-        return results;
-    }
-    
-    // Показ всех записей
-    void displayAll() const {
-        if (entries.empty()) {
-            cout << "\nСправочник пуст!" << endl;
-            return;
-        }
-        
-        cout << "\n" << string(115, '=') << endl;
-        cout << left << setw(25) << "Название фирмы" 
-             << setw(20) << "Владелец" 
-             << setw(15) << "Телефон" 
-             << setw(30) << "Адрес" 
-             << setw(20) << "Род деятельности" << endl;
-        cout << string(115, '-') << endl;
-        
-        for (const auto& entry : entries) {
-            entry.display();
-        }
-        cout << string(115, '=') << endl;
-        cout << "Всего записей: " << entries.size() << endl;
-    }
-    
-    // Вывод результатов поиска
-    void displayResults(const vector<Entry>& results, const string& searchType) const {
-        if (results.empty()) {
-            cout << "\nПо запросу \"" << searchType << "\" ничего не найдено!" << endl;
-            return;
-        }
-        
-        cout << "\nРезультаты поиска (" << results.size() << " записей):" << endl;
-        cout << string(115, '-') << endl;
-        cout << left << setw(25) << "Название фирмы" 
-             << setw(20) << "Владелец" 
-             << setw(15) << "Телефон" 
-             << setw(30) << "Адрес" 
-             << setw(20) << "Род деятельности" << endl;
-        cout << string(115, '-') << endl;
-        
-        for (const auto& entry : results) {
-            entry.display();
-        }
-    }
-    
-    // Получение количества записей
-    size_t getSize() const {
-        return entries.size();
-    }
-    
-private:
-    string toLowerCase(const string& str) const {
-        string result = str;
-        transform(result.begin(), result.end(), result.begin(), ::tolower);
-        return result;
+    ListException(const string& msg) : message(msg) {}
+    const char* what() const noexcept override {
+        return message.c_str();
     }
 };
 
-// Функция отображения меню
-void showDirectoryMenu() {
-    cout << "\n" << string(50, '=') << endl;
-    cout << "        СПРАВОЧНИК ФИРМ" << endl;
-    cout << string(50, '=') << endl;
-    cout << "1. Добавить новую запись" << endl;
-    cout << "2. Поиск по названию" << endl;
-    cout << "3. Поиск по владельцу" << endl;
-    cout << "4. Поиск по телефону" << endl;
-    cout << "5. Поиск по роду деятельности" << endl;
-    cout << "6. Показать все записи" << endl;
-    cout << "0. Выход" << endl;
-    cout << string(50, '-') << endl;
-    cout << "Выберите действие: ";
-}
+class ListEmptyException : public ListException {
+public:
+    ListEmptyException() : ListException("Ошибка: попытка操作ции с пустым списком!") {}
+};
 
-void runDirectory() {
-    Directory dir;
-    int choice;
-    
-    do {
-        showDirectoryMenu();
-        cin >> choice;
-        
-        switch (choice) {
-            case 1:
-                dir.addEntry();
-                break;
-            case 2: {
-                string name;
-                cin.ignore();
-                cout << "Введите название фирмы: ";
-                getline(cin, name);
-                dir.displayResults(dir.searchByName(name), name);
-                break;
-            }
-            case 3: {
-                string owner;
-                cin.ignore();
-                cout << "Введите владельца: ";
-                getline(cin, owner);
-                dir.displayResults(dir.searchByOwner(owner), owner);
-                break;
-            }
-            case 4: {
-                string phone;
-                cin.ignore();
-                cout << "Введите телефон: ";
-                getline(cin, phone);
-                dir.displayResults(dir.searchByPhone(phone), phone);
-                break;
-            }
-            case 5: {
-                string activity;
-                cin.ignore();
-                cout << "Введите род деятельности: ";
-                getline(cin, activity);
-                dir.displayResults(dir.searchByActivity(activity), activity);
-                break;
-            }
-            case 6:
-                dir.displayAll();
-                break;
-            case 0:
-                cout << "До свидания!" << endl;
-                break;
-            default:
-                cout << "Неверный выбор!" << endl;
-        }
-    } while (choice != 0);
-}
+class ListIndexOutOfRangeException : public ListException {
+public:
+    ListIndexOutOfRangeException(int index, int size) 
+        : ListException("Ошибка: индекс " + to_string(index) + " вне диапазона [0, " + to_string(size - 1) + "]") {}
+};
 
-#include <iostream>
-#include <atomic>
+class ListMemoryAllocationException : public ListException {
+public:
+    ListMemoryAllocationException() 
+        : ListException("Ошибка: не удалось выделить память для нового узла списка!") {}
+};
 
-// ============ Реализация unique_ptr ============
+class ListInvalidOperationException : public ListException {
+public:
+    ListInvalidOperationException(const string& op) 
+        : ListException("Ошибка: недопустимая операция - " + op) {}
+};
+
+// Шаблонный класс для узла двусвязного списка
 template<typename T>
-class MyUniquePtr {
+class DoubleListNode {
+public:
+    T data;
+    DoubleListNode* prev;
+    DoubleListNode* next;
+    
+    DoubleListNode(const T& value) : data(value), prev(nullptr), next(nullptr) {
+        if (this == nullptr) {
+            throw ListMemoryAllocationException();
+        }
+    }
+};
+
+// Шаблонный класс Двусвязный список с обработкой исключений
+template<typename T>
+class DoubleLinkedList {
 private:
-    T* ptr;
+    DoubleListNode<T>* head;
+    DoubleListNode<T>* tail;
+    int listSize;
+    
+    void checkEmpty() const {
+        if (isEmpty()) {
+            throw ListEmptyException();
+        }
+    }
+    
+    void checkIndex(int index) const {
+        if (index < 0 || index >= listSize) {
+            throw ListIndexOutOfRangeException(index, listSize);
+        }
+    }
     
 public:
     // Конструктор
-    explicit MyUniquePtr(T* p = nullptr) : ptr(p) {}
+    DoubleLinkedList() : head(nullptr), tail(nullptr), listSize(0) {}
     
-    // Запрещаем копирование
-    MyUniquePtr(const MyUniquePtr&) = delete;
-    MyUniquePtr& operator=(const MyUniquePtr&) = delete;
-    
-    // Конструктор перемещения
-    MyUniquePtr(MyUniquePtr&& other) noexcept : ptr(other.ptr) {
-        other.ptr = nullptr;
-    }
-    
-    // Оператор перемещения
-    MyUniquePtr& operator=(MyUniquePtr&& other) noexcept {
-        if (this != &other) {
-            delete ptr;
-            ptr = other.ptr;
-            other.ptr = nullptr;
+    // Конструктор копирования
+    DoubleLinkedList(const DoubleLinkedList& other) : head(nullptr), tail(nullptr), listSize(0) {
+        try {
+            DoubleListNode<T>* current = other.head;
+            while (current) {
+                pushBack(current->data);
+                current = current->next;
+            }
+        } catch (const exception& e) {
+            clear();
+            throw;
         }
-        return *this;
     }
     
     // Деструктор
-    ~MyUniquePtr() {
-        delete ptr;
-    }
-    
-    // Операторы разыменования
-    T& operator*() const {
-        return *ptr;
-    }
-    
-    T* operator->() const {
-        return ptr;
-    }
-    
-    // Получение сырого указателя
-    T* get() const {
-        return ptr;
-    }
-    
-    // Освобождение управления
-    T* release() {
-        T* temp = ptr;
-        ptr = nullptr;
-        return temp;
-    }
-    
-    // Сброс указателя
-    void reset(T* p = nullptr) {
-        delete ptr;
-        ptr = p;
-    }
-    
-    // Проверка на наличие указателя
-    explicit operator bool() const {
-        return ptr != nullptr;
-    }
-};
-
-// ============ Реализация shared_ptr ============
-template<typename T>
-class MySharedPtr {
-private:
-    T* ptr;
-    std::atomic<int>* refCount;
-    
-    void release() {
-        if (refCount) {
-            if (--(*refCount) == 0) {
-                delete ptr;
-                delete refCount;
-            }
-            ptr = nullptr;
-            refCount = nullptr;
-        }
-    }
-    
-public:
-    // Конструктор
-    explicit MySharedPtr(T* p = nullptr) : ptr(p), refCount(nullptr) {
-        if (ptr) {
-            refCount = new std::atomic<int>(1);
-        }
-    }
-    
-    // Конструктор копирования
-    MySharedPtr(const MySharedPtr& other) : ptr(other.ptr), refCount(other.refCount) {
-        if (refCount) {
-            (*refCount)++;
-        }
+    ~DoubleLinkedList() {
+        clear();
     }
     
     // Оператор присваивания
-    MySharedPtr& operator=(const MySharedPtr& other) {
+    DoubleLinkedList& operator=(const DoubleLinkedList& other) {
         if (this != &other) {
-            release();
-            ptr = other.ptr;
-            refCount = other.refCount;
-            if (refCount) {
-                (*refCount)++;
+            clear();
+            try {
+                DoubleListNode<T>* current = other.head;
+                while (current) {
+                    pushBack(current->data);
+                    current = current->next;
+                }
+            } catch (const exception& e) {
+                clear();
+                throw;
             }
         }
         return *this;
     }
     
-    // Конструктор перемещения
-    MySharedPtr(MySharedPtr&& other) noexcept : ptr(other.ptr), refCount(other.refCount) {
-        other.ptr = nullptr;
-        other.refCount = nullptr;
-    }
-    
-    // Оператор перемещения
-    MySharedPtr& operator=(MySharedPtr&& other) noexcept {
-        if (this != &other) {
-            release();
-            ptr = other.ptr;
-            refCount = other.refCount;
-            other.ptr = nullptr;
-            other.refCount = nullptr;
+    // Добавление в начало
+    void pushFront(const T& value) {
+        try {
+            DoubleListNode<T>* newNode = new DoubleListNode<T>(value);
+            if (!newNode) {
+                throw ListMemoryAllocationException();
+            }
+            
+            if (!head) {
+                head = tail = newNode;
+            } else {
+                newNode->next = head;
+                head->prev = newNode;
+                head = newNode;
+            }
+            listSize++;
+        } catch (const bad_alloc& e) {
+            throw ListMemoryAllocationException();
         }
-        return *this;
     }
     
-    // Деструктор
-    ~MySharedPtr() {
-        release();
+    // Добавление в конец
+    void pushBack(const T& value) {
+        try {
+            DoubleListNode<T>* newNode = new DoubleListNode<T>(value);
+            if (!newNode) {
+                throw ListMemoryAllocationException();
+            }
+            
+            if (!head) {
+                head = tail = newNode;
+            } else {
+                newNode->prev = tail;
+                tail->next = newNode;
+                tail = newNode;
+            }
+            listSize++;
+        } catch (const bad_alloc& e) {
+            throw ListMemoryAllocationException();
+        }
     }
     
-    // Операторы разыменования
-    T& operator*() const {
-        return *ptr;
-    }
-    
-    T* operator->() const {
-        return ptr;
-    }
-    
-    // Получение сырого указателя
-    T* get() const {
-        return ptr;
-    }
-    
-    // Количество ссылок
-    int use_count() const {
-        return refCount ? refCount->load() : 0;
-    }
-    
-    // Проверка на наличие указателя
-    explicit operator bool() const {
-        return ptr != nullptr;
-    }
-    
-    // Сброс указателя
-    void reset(T* p = nullptr) {
-        release();
-        ptr = p;
-        if (ptr) {
-            refCount = new std::atomic<int>(1);
+    // Удаление из начала
+    T popFront() {
+        checkEmpty();
+        
+        DoubleListNode<T>* temp = head;
+        T value = temp->data;
+        
+        if (head == tail) {
+            head = tail = nullptr;
         } else {
-            refCount = nullptr;
+            head = head->next;
+            head->prev = nullptr;
+        }
+        
+        delete temp;
+        listSize--;
+        return value;
+    }
+    
+    // Удаление из конца
+    T popBack() {
+        checkEmpty();
+        
+        DoubleListNode<T>* temp = tail;
+        T value = temp->data;
+        
+        if (head == tail) {
+            head = tail = nullptr;
+        } else {
+            tail = tail->prev;
+            tail->next = nullptr;
+        }
+        
+        delete temp;
+        listSize--;
+        return value;
+    }
+    
+    // Получение элемента по индексу
+    T getAt(int index) const {
+        checkIndex(index);
+        
+        DoubleListNode<T>* current = head;
+        for (int i = 0; i < index; i++) {
+            current = current->next;
+        }
+        return current->data;
+    }
+    
+    // Вставка по индексу
+    void insertAt(int index, const T& value) {
+        if (index < 0 || index > listSize) {
+            throw ListIndexOutOfRangeException(index, listSize);
+        }
+        
+        if (index == 0) {
+            pushFront(value);
+        } else if (index == listSize) {
+            pushBack(value);
+        } else {
+            try {
+                DoubleListNode<T>* newNode = new DoubleListNode<T>(value);
+                if (!newNode) {
+                    throw ListMemoryAllocationException();
+                }
+                
+                DoubleListNode<T>* current = head;
+                for (int i = 0; i < index; i++) {
+                    current = current->next;
+                }
+                
+                newNode->prev = current->prev;
+                newNode->next = current;
+                current->prev->next = newNode;
+                current->prev = newNode;
+                listSize++;
+            } catch (const bad_alloc& e) {
+                throw ListMemoryAllocationException();
+            }
         }
     }
-};
-
-// Тестовый класс для демонстрации
-class TestClass {
-private:
-    string name;
-    int value;
     
-public:
-    TestClass(const string& n, int v) : name(n), value(v) {
-        cout << "Создан объект TestClass: " << name << " (значение: " << value << ")" << endl;
-    }
-    
-    ~TestClass() {
-        cout << "Уничтожен объект TestClass: " << name << endl;
-    }
-    
-    void display() const {
-        cout << "Объект: " << name << ", значение: " << value << endl;
-    }
-    
-    void setValue(int v) {
-        value = v;
-    }
-};
-
-// Тестирование умных указателей
-void testSmartPointers() {
-    cout << "\n========== ТЕСТИРОВАНИЕ UNIQUE_PTR ==========" << endl;
-    
-    // Создание и использование MyUniquePtr
-    MyUniquePtr<TestClass> ptr1(new TestClass("Объект1", 100));
-    ptr1->display();
-    
-    // Перемещение
-    MyUniquePtr<TestClass> ptr2 = std::move(ptr1);
-    if (!ptr1) {
-        cout << "ptr1 теперь пуст" << endl;
-    }
-    ptr2->display();
-    
-    // Сброс и освобождение
-    ptr2.reset(new TestClass("Объект2", 200));
-    ptr2->display();
-    
-    TestClass* rawPtr = ptr2.release();
-    cout << "Освобожденный указатель: ";
-    rawPtr->display();
-    delete rawPtr;
-    
-    cout << "\n========== ТЕСТИРОВАНИЕ SHARED_PTR ==========" << endl;
-    
-    // Создание и использование MySharedPtr
-    MySharedPtr<TestClass> sp1(new TestClass("SharedObj1", 1000));
-    cout << "sp1 count: " << sp1.use_count() << endl;
-    
-    {
-        MySharedPtr<TestClass> sp2 = sp1;
-        cout << "sp1 count после копирования: " << sp1.use_count() << endl;
-        cout << "sp2 count: " << sp2.use_count() << endl;
+    // Удаление по индексу
+    T removeAt(int index) {
+        checkIndex(index);
         
-        MySharedPtr<TestClass> sp3 = sp2;
-        cout << "sp1 count после второго копирования: " << sp1.use_count() << endl;
-        
-        sp3->display();
-    }
-    
-    cout << "sp1 count после выхода из области видимости: " << sp1.use_count() << endl;
-    sp1->display();
-    
-    // Сброс
-    sp1.reset(new TestClass("SharedObj2", 2000));
-    cout << "После сброса, sp1 count: " << sp1.use_count() << endl;
-    sp1->display();
-}
-
-#include <fstream>
-#include <map>
-#include <cctype>
-#include <algorithm>
-
-class FrequencyDictionary {
-private:
-    map<string, int> wordFrequency;
-    int totalWords;
-    
-    // Очистка слова от знаков препинания и приведение к нижнему регистру
-    string cleanWord(const string& word) {
-        string result;
-        for (char c : word) {
-            if (isalnum(c) || c == '-' || c == '\'') {
-                result += tolower(c);
+        if (index == 0) {
+            return popFront();
+        } else if (index == listSize - 1) {
+            return popBack();
+        } else {
+            DoubleListNode<T>* current = head;
+            for (int i = 0; i < index; i++) {
+                current = current->next;
             }
+            
+            T value = current->data;
+            current->prev->next = current->next;
+            current->next->prev = current->prev;
+            delete current;
+            listSize--;
+            return value;
+        }
+    }
+    
+    // Поиск элемента
+    int find(const T& value) const {
+        DoubleListNode<T>* current = head;
+        int index = 0;
+        while (current) {
+            if (current->data == value) {
+                return index;
+            }
+            current = current->next;
+            index++;
+        }
+        return -1;
+    }
+    
+    // Просмотр первого элемента
+    T front() const {
+        checkEmpty();
+        return head->data;
+    }
+    
+    // Просмотр последнего элемента
+    T back() const {
+        checkEmpty();
+        return tail->data;
+    }
+    
+    // Отображение списка
+    void displayForward() const {
+        if (isEmpty()) {
+            cout << "Список пуст." << endl;
+            return;
+        }
+        
+        DoubleListNode<T>* current = head;
+        while (current) {
+            cout << current->data << " ";
+            current = current->next;
+        }
+        cout << "(размер: " << listSize << ")" << endl;
+    }
+    
+    // Очистка списка
+    void clear() {
+        while (head) {
+            DoubleListNode<T>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+        tail = nullptr;
+        listSize = 0;
+    }
+    
+    // Получение размера
+    int size() const {
+        return listSize;
+    }
+    
+    // Проверка на пустоту
+    bool isEmpty() const {
+        return head == nullptr;
+    }
+    
+    // Клонирование списка
+    DoubleLinkedList<T> clone() const {
+        DoubleLinkedList<T> newList;
+        DoubleListNode<T>* current = head;
+        while (current) {
+            newList.pushBack(current->data);
+            current = current->next;
+        }
+        return newList;
+    }
+    
+    // Оператор + (объединение)
+    DoubleLinkedList<T> operator+(const DoubleLinkedList<T>& other) const {
+        DoubleLinkedList<T> result = this->clone();
+        DoubleListNode<T>* current = other.head;
+        while (current) {
+            result.pushBack(current->data);
+            current = current->next;
         }
         return result;
     }
     
-    // Разбиение текста на слова
-    void processText(const string& text) {
-        stringstream ss(text);
-        string word;
+    // Оператор * (пересечение)
+    DoubleLinkedList<T> operator*(const DoubleLinkedList<T>& other) const {
+        DoubleLinkedList<T> result;
         
-        while (ss >> word) {
-            string cleaned = cleanWord(word);
-            if (!cleaned.empty() && isalpha(cleaned[0])) {
-                wordFrequency[cleaned]++;
-                totalWords++;
+        DoubleListNode<T>* current = head;
+        while (current) {
+            if (other.find(current->data) != -1 && result.find(current->data) == -1) {
+                result.pushBack(current->data);
             }
+            current = current->next;
+        }
+        return result;
+    }
+};
+
+// Демонстрация работы списка с исключениями
+void demonstrateDoubleLinkedListWithExceptions() {
+    cout << "\n========== ДВУСВЯЗНЫЙ СПИСОК С ОБРАБОТКОЙ ИСКЛЮЧЕНИЙ ==========" << endl;
+    
+    DoubleLinkedList<int> list;
+    
+    // Тест 1: Добавление элементов
+    cout << "\n--- Добавление элементов ---" << endl;
+    try {
+        list.pushBack(10);
+        list.pushBack(20);
+        list.pushBack(30);
+        list.pushFront(5);
+        list.displayForward();
+    } catch (const exception& e) {
+        cerr << "Исключение: " << e.what() << endl;
+    }
+    
+    // Тест 2: Попытка удаления из пустого списка
+    cout << "\n--- Тест удаления из пустого списка ---" << endl;
+    try {
+        DoubleLinkedList<int> emptyList;
+        emptyList.popFront(); // Должно выбросить исключение
+    } catch (const ListEmptyException& e) {
+        cerr << "Поймано исключение: " << e.what() << endl;
+    }
+    
+    // Тест 3: Попытка доступа по неверному индексу
+    cout << "\n--- Тест доступа по неверному индексу ---" << endl;
+    try {
+        list.getAt(10); // Должно выбросить исключение
+    } catch (const ListIndexOutOfRangeException& e) {
+        cerr << "Поймано исключение: " << e.what() << endl;
+    }
+    
+    // Тест 4: Вставка по неверному индексу
+    cout << "\n--- Тест вставки по неверному индексу ---" << endl;
+    try {
+        list.insertAt(100, 999);
+    } catch (const ListIndexOutOfRangeException& e) {
+        cerr << "Поймано исключение: " << e.what() << endl;
+    }
+    
+    // Тест 5: Нормальная работа
+    cout << "\n--- Нормальная работа списка ---" << endl;
+    try {
+        cout << "Первый элемент: " << list.front() << endl;
+        cout << "Последний элемент: " << list.back() << endl;
+        cout << "Элемент по индексу 2: " << list.getAt(2) << endl;
+        
+        list.insertAt(2, 99);
+        cout << "После вставки 99 на позицию 2: ";
+        list.displayForward();
+        
+        int removed = list.removeAt(2);
+        cout << "Удален элемент: " << removed << endl;
+        list.displayForward();
+    } catch (const exception& e) {
+        cerr << "Исключение: " << e.what() << endl;
+    }
+}
+
+// Базовый класс для всех исключений приложения
+class ApplicationException : public exception {
+protected:
+    string message;
+    string file;
+    int line;
+    
+public:
+    ApplicationException(const string& msg, const string& f = "", int l = 0) 
+        : message(msg), file(f), line(l) {}
+    
+    virtual const char* what() const noexcept override {
+        static string fullMessage;
+        if (!file.empty()) {
+            fullMessage = message + " [" + file + ":" + to_string(line) + "]";
+        } else {
+            fullMessage = message;
+        }
+        return fullMessage.c_str();
+    }
+    
+    virtual string getDetails() const {
+        return message;
+    }
+};
+
+// 1. Исключения для математических операций
+class MathException : public ApplicationException {
+public:
+    MathException(const string& msg, const string& f = "", int l = 0) 
+        : ApplicationException(msg, f, l) {}
+};
+
+class DivisionByZeroException : public MathException {
+public:
+    DivisionByZeroException(const string& f = "", int l = 0) 
+        : MathException("Ошибка: деление на ноль!", f, l) {}
+};
+
+class FractionInvalidException : public MathException {
+public:
+    FractionInvalidException(const string& f = "", int l = 0) 
+        : MathException("Ошибка: некорректная дробь (знаменатель не может быть нулем)!", f, l) {}
+};
+
+class OverflowException : public MathException {
+public:
+    OverflowException(const string& operation, const string& f = "", int l = 0) 
+        : MathException("Ошибка: переполнение при выполнении операции " + operation, f, l) {}
+};
+
+// 2. Исключения для работы с памятью
+class MemoryException : public ApplicationException {
+public:
+    MemoryException(const string& msg, const string& f = "", int l = 0) 
+        : ApplicationException(msg, f, l) {}
+};
+
+class MemoryAllocationException : public MemoryException {
+public:
+    MemoryAllocationException(const string& f = "", int l = 0) 
+        : MemoryException("Ошибка: не удалось выделить память!", f, l) {}
+};
+
+class MemoryLeakException : public MemoryException {
+public:
+    MemoryLeakException(const string& resource, const string& f = "", int l = 0) 
+        : MemoryException("Ошибка: утечка памяти при работе с ресурсом: " + resource, f, l) {}
+};
+
+class NullPointerException : public MemoryException {
+public:
+    NullPointerException(const string& ptrName, const string& f = "", int l = 0) 
+        : MemoryException("Ошибка: нулевой указатель - " + ptrName, f, l) {}
+};
+
+// 3. Исключения для работы с файлами
+class FileException : public ApplicationException {
+public:
+    FileException(const string& msg, const string& f = "", int l = 0) 
+        : ApplicationException(msg, f, l) {}
+};
+
+class FileNotFoundException : public FileException {
+public:
+    FileNotFoundException(const string& filename, const string& f = "", int l = 0) 
+        : FileException("Ошибка: файл не найден - " + filename, f, l) {}
+};
+
+class FileOpenException : public FileException {
+public:
+    FileOpenException(const string& filename, const string& f = "", int l = 0) 
+        : FileException("Ошибка: не удалось открыть файл - " + filename, f, l) {}
+};
+
+class FileReadException : public FileException {
+public:
+    FileReadException(const string& filename, const string& f = "", int l = 0) 
+        : FileException("Ошибка: ошибка чтения из файла - " + filename, f, l) {}
+};
+
+class FileWriteException : public FileException {
+public:
+    FileWriteException(const string& filename, const string& f = "", int l = 0) 
+        : FileException("Ошибка: ошибка записи в файл - " + filename, f, l) {}
+};
+
+// 4. Исключения для работы со строками
+class StringException : public ApplicationException {
+public:
+    StringException(const string& msg, const string& f = "", int l = 0) 
+        : ApplicationException(msg, f, l) {}
+};
+
+class InvalidStringException : public StringException {
+public:
+    InvalidStringException(const string& str, const string& f = "", int l = 0) 
+        : StringException("Ошибка: некорректная строка - " + str, f, l) {}
+};
+
+class StringIndexOutOfRangeException : public StringException {
+public:
+    StringIndexOutOfRangeException(int index, int length, const string& f = "", int l = 0) 
+        : StringException("Ошибка: индекс " + to_string(index) + " вне диапазона [0, " + to_string(length - 1) + "]", f, l) {}
+};
+
+// 5. Исключения для работы с контейнерами
+class ContainerException : public ApplicationException {
+public:
+    ContainerException(const string& msg, const string& f = "", int l = 0) 
+        : ApplicationException(msg, f, l) {}
+};
+
+class ContainerEmptyException : public ContainerException {
+public:
+    ContainerEmptyException(const string& container, const string& f = "", int l = 0) 
+        : ContainerException("Ошибка: контейнер " + container + " пуст!", f, l) {}
+};
+
+class ContainerFullException : public ContainerException {
+public:
+    ContainerFullException(const string& container, const string& f = "", int l = 0) 
+        : ContainerException("Ошибка: контейнер " + container + " переполнен!", f, l) {}
+};
+
+class ElementNotFoundException : public ContainerException {
+public:
+    ElementNotFoundException(const string& element, const string& f = "", int l = 0) 
+        : ContainerException("Ошибка: элемент " + element + " не найден в контейнере!", f, l) {}
+};
+
+// Тестирование иерархии исключений
+class Fraction {
+private:
+    int numerator;
+    int denominator;
+    
+    void validate() const {
+        if (denominator == 0) {
+            throw FractionInvalidException(__FILE__, __LINE__);
         }
     }
     
 public:
-    FrequencyDictionary() : totalWords(0) {}
-    
-    // Чтение текста из файла
-    bool loadFromFile(const string& filename) {
-        ifstream file(filename);
-        if (!file.is_open()) {
-            cerr << "Ошибка: не удалось открыть файл " << filename << endl;
-            return false;
-        }
-        
-        stringstream buffer;
-        buffer << file.rdbuf();
-        file.close();
-        
-        processText(buffer.str());
-        return true;
+    Fraction(int num = 0, int den = 1) : numerator(num), denominator(den) {
+        validate();
     }
     
-    // Вывод информации обо всех словах
-    void displayAllWords() const {
-        if (wordFrequency.empty()) {
-            cout << "Словарь пуст!" << endl;
-            return;
+    Fraction operator/(const Fraction& other) const {
+        if (other.numerator == 0) {
+            throw DivisionByZeroException(__FILE__, __LINE__);
         }
-        
-        cout << "\n" << string(60, '=') << endl;
-        cout << "ЧАСТОТНЫЙ СЛОВАРЬ" << endl;
-        cout << string(60, '=') << endl;
-        cout << left << setw(25) << "Слово" 
-             << right << setw(15) << "Частота" 
-             << setw(20) << "Частота (%)" << endl;
-        cout << string(60, '-') << endl;
-        
-        for (const auto& pair : wordFrequency) {
-            double percentage = (static_cast<double>(pair.second) / totalWords) * 100;
-            cout << left << setw(25) << pair.first 
-                 << right << setw(15) << pair.second
-                 << setw(19) << fixed << setprecision(2) << percentage << "%" << endl;
-        }
-        cout << string(60, '-') << endl;
-        cout << "Всего уникальных слов: " << wordFrequency.size() << endl;
-        cout << "Всего слов в тексте: " << totalWords << endl;
+        return Fraction(numerator * other.denominator, denominator * other.numerator);
     }
     
-    // Вывод наиболее часто встречающегося слова
-    void displayMostFrequent() const {
-        if (wordFrequency.empty()) {
-            cout << "Словарь пуст!" << endl;
-            return;
-        }
-        
-        auto maxElement = max_element(wordFrequency.begin(), wordFrequency.end(),
-            [](const pair<string, int>& a, const pair<string, int>& b) {
-                return a.second < b.second;
-            });
-        
-        cout << "\n=== НАИБОЛЕЕ ЧАСТО ВСТРЕЧАЮЩЕЕСЯ СЛОВО ===" << endl;
-        cout << "Слово: \"" << maxElement->first << "\"" << endl;
-        cout << "Частота: " << maxElement->second << " раз" << endl;
-        
-        double percentage = (static_cast<double>(maxElement->second) / totalWords) * 100;
-        cout << "Частота: " << fixed << setprecision(2) << percentage << "% от всех слов" << endl;
-        
-        // Поиск всех слов с максимальной частотой (если их несколько)
-        auto range = equal_range(wordFrequency.begin(), wordFrequency.end(), 
-            maxElement->second,
-            [](const pair<string, int>& a, int b) { return a.second < b; });
-        
-        int count = distance(range.first, range.second);
-        if (count > 1) {
-            cout << "\nДругие слова с такой же частотой:" << endl;
-            for (auto it = range.first; it != range.second; ++it) {
-                if (it->first != maxElement->first) {
-                    cout << " - \"" << it->first << "\"" << endl;
-                }
-            }
-        }
-    }
-    
-    // Сохранение результата в файл
-    bool saveToFile(const string& filename) const {
-        ofstream file(filename);
-        if (!file.is_open()) {
-            cerr << "Ошибка: не удалось создать файл " << filename << endl;
-            return false;
-        }
-        
-        file << "Частотный словарь\n";
-        file << string(50, '=') << "\n";
-        file << left << setw(25) << "Слово" 
-             << right << setw(15) << "Частота" << "\n";
-        file << string(50, '-') << "\n";
-        
-        for (const auto& pair : wordFrequency) {
-            file << left << setw(25) << pair.first 
-                 << right << setw(15) << pair.second << "\n";
-        }
-        
-        file << string(50, '-') << "\n";
-        file << "Всего уникальных слов: " << wordFrequency.size() << "\n";
-        file << "Всего слов в тексте: " << totalWords << "\n";
-        
-        file.close();
-        return true;
-    }
-    
-    // Получение статистики
-    void getStatistics() const {
-        if (wordFrequency.empty()) return;
-        
-        int minFreq = min_element(wordFrequency.begin(), wordFrequency.end(),
-            [](const auto& a, const auto& b) { return a.second < b.second; })->second;
-        
-        int maxFreq = max_element(wordFrequency.begin(), wordFrequency.end(),
-            [](const auto& a, const auto& b) { return a.second < b.second; })->second;
-        
-        double avgFreq = static_cast<double>(totalWords) / wordFrequency.size();
-        
-        cout << "\n=== СТАТИСТИКА СЛОВАРЯ ===" << endl;
-        cout << "Минимальная частота слова: " << minFreq << endl;
-        cout << "Максимальная частота слова: " << maxFreq << endl;
-        cout << "Средняя частота слова: " << fixed << setprecision(2) << avgFreq << endl;
+    void display() const {
+        cout << numerator << "/" << denominator;
     }
 };
 
-// Создание тестового файла для демонстрации
-void createTestFile() {
-    ofstream file("test_text.txt");
-    if (file.is_open()) {
-        file << "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-             << "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
-             << "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris. "
-             << "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum. "
-             << "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-             << "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-        file.close();
-        cout << "Создан тестовый файл test_text.txt" << endl;
+void testExceptionHierarchy() {
+    cout << "\n========== ТЕСТИРОВАНИЕ ИЕРАРХИИ ИСКЛЮЧЕНИЙ ==========" << endl;
+    
+    // Тест 1: Математические исключения
+    cout << "\n--- Математические исключения ---" << endl;
+    try {
+        Fraction f1(1, 0); // Должно выбросить исключение
+    } catch (const FractionInvalidException& e) {
+        cerr << "Поймано FractionInvalidException: " << e.what() << endl;
+    }
+    
+    try {
+        Fraction f1(1, 2);
+        Fraction f2(0, 1);
+        Fraction f3 = f1 / f2; // Деление на ноль
+    } catch (const DivisionByZeroException& e) {
+        cerr << "Поймано DivisionByZeroException: " << e.what() << endl;
+    }
+    
+    // Тест 2: Файловые исключения
+    cout << "\n--- Файловые исключения ---" << endl;
+    try {
+        throw FileNotFoundException("data.txt", __FILE__, __LINE__);
+    } catch (const FileNotFoundException& e) {
+        cerr << "Поймано FileNotFoundException: " << e.what() << endl;
+    }
+    
+    // Тест 3: Исключения памяти
+    cout << "\n--- Исключения памяти ---" << endl;
+    try {
+        throw MemoryAllocationException(__FILE__, __LINE__);
+    } catch (const MemoryAllocationException& e) {
+        cerr << "Поймано MemoryAllocationException: " << e.what() << endl;
+    }
+    
+    // Тест 4: Исключения контейнеров
+    cout << "\n--- Исключения контейнеров ---" << endl;
+    try {
+        throw ContainerEmptyException("Vector", __FILE__, __LINE__);
+    } catch (const ContainerEmptyException& e) {
+        cerr << "Поймано ContainerEmptyException: " << e.what() << endl;
+    }
+    
+    // Тест 5: Исключения строк
+    cout << "\n--- Исключения строк ---" << endl;
+    try {
+        throw StringIndexOutOfRangeException(10, 5, __FILE__, __LINE__);
+    } catch (const StringIndexOutOfRangeException& e) {
+        cerr << "Поймано StringIndexOutOfRangeException: " << e.what() << endl;
+    }
+    
+    // Демонстрация полиморфизма исключений
+    cout << "\n--- Полиморфизм исключений ---" << endl;
+    try {
+        throw FileOpenException("config.ini", __FILE__, __LINE__);
+    } catch (const FileException& e) {
+        cerr << "Поймано как FileException: " << e.what() << endl;
+        cout << "Детали: " << e.getDetails() << endl;
+    } catch (const ApplicationException& e) {
+        cerr << "Поймано как ApplicationException: " << e.what() << endl;
     }
 }
 
-void runFrequencyDictionary() {
-    cout << "\n========== ЧАСТОТНЫЙ СЛОВАРЬ ==========" << endl;
+// Пространство имен для математических утилит
+namespace MathUtils {
     
-    // Создаем тестовый файл
-    createTestFile();
-    
-    FrequencyDictionary dict;
-    
-    // Загрузка из файла
-    if (dict.loadFromFile("test_text.txt")) {
-        // Вывод всех слов
-        dict.displayAllWords();
+    // Класс Fraction (Дробь)
+    class Fraction {
+    private:
+        int numerator;
+        int denominator;
         
-        // Вывод наиболее часто встречающегося слова
-        dict.displayMostFrequent();
-        
-        // Вывод статистики
-        dict.getStatistics();
-        
-        // Сохранение результата в файл
-        if (dict.saveToFile("frequency_result.txt")) {
-            cout << "\nРезультат сохранен в файл frequency_result.txt" << endl;
+        int gcd(int a, int b) const {
+            a = abs(a);
+            b = abs(b);
+            while (b != 0) {
+                int temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
         }
+        
+        void reduce() {
+            if (denominator == 0) {
+                throw DivisionByZeroException(__FILE__, __LINE__);
+            }
+            int divisor = gcd(numerator, denominator);
+            numerator /= divisor;
+            denominator /= divisor;
+            if (denominator < 0) {
+                numerator = -numerator;
+                denominator = -denominator;
+            }
+        }
+        
+    public:
+        Fraction(int num = 0, int den = 1) : numerator(num), denominator(den) {
+            reduce();
+        }
+        
+        Fraction operator+(const Fraction& other) const {
+            return Fraction(
+                numerator * other.denominator + other.numerator * denominator,
+                denominator * other.denominator
+            );
+        }
+        
+        Fraction operator-(const Fraction& other) const {
+            return Fraction(
+                numerator * other.denominator - other.numerator * denominator,
+                denominator * other.denominator
+            );
+        }
+        
+        Fraction operator*(const Fraction& other) const {
+            return Fraction(
+                numerator * other.numerator,
+                denominator * other.denominator
+            );
+        }
+        
+        Fraction operator/(const Fraction& other) const {
+            if (other.numerator == 0) {
+                throw DivisionByZeroException(__FILE__, __LINE__);
+            }
+            return Fraction(
+                numerator * other.denominator,
+                denominator * other.numerator
+            );
+        }
+        
+        double toDouble() const {
+            return static_cast<double>(numerator) / denominator;
+        }
+        
+        void display() const {
+            if (denominator == 1) {
+                cout << numerator;
+            } else {
+                cout << numerator << "/" << denominator;
+            }
+        }
+    };
+    
+    // Класс Point2D (Точка в двумерном пространстве)
+    class Point2D {
+    private:
+        double x;
+        double y;
+        
+    public:
+        Point2D(double xCoord = 0, double yCoord = 0) : x(xCoord), y(yCoord) {}
+        
+        double getX() const { return x; }
+        double getY() const { return y; }
+        
+        double distanceTo(const Point2D& other) const {
+            double dx = x - other.x;
+            double dy = y - other.y;
+            return sqrt(dx * dx + dy * dy);
+        }
+        
+        Point2D operator+(const Point2D& other) const {
+            return Point2D(x + other.x, y + other.y);
+        }
+        
+        Point2D operator-(const Point2D& other) const {
+            return Point2D(x - other.x, y - other.y);
+        }
+        
+        void display() const {
+            cout << "(" << x << ", " << y << ")";
+        }
+    };
+    
+    // Класс Point3D (Точка в трехмерном пространстве)
+    class Point3D {
+    private:
+        double x;
+        double y;
+        double z;
+        
+    public:
+        Point3D(double xCoord = 0, double yCoord = 0, double zCoord = 0) 
+            : x(xCoord), y(yCoord), z(zCoord) {}
+        
+        double getX() const { return x; }
+        double getY() const { return y; }
+        double getZ() const { return z; }
+        
+        double distanceTo(const Point3D& other) const {
+            double dx = x - other.x;
+            double dy = y - other.y;
+            double dz = z - other.z;
+            return sqrt(dx * dx + dy * dy + dz * dz);
+        }
+        
+        Point3D operator+(const Point3D& other) const {
+            return Point3D(x + other.x, y + other.y, z + other.z);
+        }
+        
+        Point3D operator-(const Point3D& other) const {
+            return Point3D(x - other.x, y - other.y, z - other.z);
+        }
+        
+        double dotProduct(const Point3D& other) const {
+            return x * other.x + y * other.y + z * other.z;
+        }
+        
+        Point3D crossProduct(const Point3D& other) const {
+            return Point3D(
+                y * other.z - z * other.y,
+                z * other.x - x * other.z,
+                x * other.y - y * other.x
+            );
+        }
+        
+        void display() const {
+            cout << "(" << x << ", " << y << ", " << z << ")";
+        }
+    };
+    
+    // Класс Matrix (Матрица)
+    template<typename T>
+    class Matrix {
+    private:
+        T** data;
+        int rows;
+        int cols;
+        
+    public:
+        Matrix(int r, int c) : rows(r), cols(c) {
+            data = new T*[rows];
+            for (int i = 0; i < rows; i++) {
+                data[i] = new T[cols]();
+            }
+        }
+        
+        ~Matrix() {
+            for (int i = 0; i < rows; i++) {
+                delete[] data[i];
+            }
+            delete[] data;
+        }
+        
+        T& operator()(int i, int j) {
+            if (i < 0 || i >= rows || j < 0 || j >= cols) {
+                throw out_of_range("Индекс вне границ");
+            }
+            return data[i][j];
+        }
+        
+        void display() const {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    cout << data[i][j] << "\t";
+                }
+                cout << endl;
+            }
+        }
+    };
+}
+
+// Пространство имен для утилит работы с контейнерами
+namespace ContainerUtils {
+    
+    template<typename T>
+    class Stack {
+    private:
+        struct Node {
+            T data;
+            Node* next;
+            Node(const T& value) : data(value), next(nullptr) {}
+        };
+        Node* top;
+        int size;
+        
+    public:
+        Stack() : top(nullptr), size(0) {}
+        
+        ~Stack() {
+            while (!isEmpty()) {
+                pop();
+            }
+        }
+        
+        void push(const T& value) {
+            Node* newNode = new Node(value);
+            newNode->next = top;
+            top = newNode;
+            size++;
+        }
+        
+        T pop() {
+            if (isEmpty()) {
+                throw ContainerEmptyException("Stack", __FILE__, __LINE__);
+            }
+            Node* temp = top;
+            T value = temp->data;
+            top = top->next;
+            delete temp;
+            size--;
+            return value;
+        }
+        
+        T peek() const {
+            if (isEmpty()) {
+                throw ContainerEmptyException("Stack", __FILE__, __LINE__);
+            }
+            return top->data;
+        }
+        
+        bool isEmpty() const {
+            return top == nullptr;
+        }
+        
+        int getSize() const {
+            return size;
+        }
+    };
+    
+    template<typename T>
+    class Queue {
+    private:
+        struct Node {
+            T data;
+            Node* next;
+            Node(const T& value) : data(value), next(nullptr) {}
+        };
+        Node* front;
+        Node* rear;
+        int size;
+        
+    public:
+        Queue() : front(nullptr), rear(nullptr), size(0) {}
+        
+        ~Queue() {
+            while (!isEmpty()) {
+                dequeue();
+            }
+        }
+        
+        void enqueue(const T& value) {
+            Node* newNode = new Node(value);
+            if (isEmpty()) {
+                front = rear = newNode;
+            } else {
+                rear->next = newNode;
+                rear = newNode;
+            }
+            size++;
+        }
+        
+        T dequeue() {
+            if (isEmpty()) {
+                throw ContainerEmptyException("Queue", __FILE__, __LINE__);
+            }
+            Node* temp = front;
+            T value = temp->data;
+            front = front->next;
+            if (!front) {
+                rear = nullptr;
+            }
+            delete temp;
+            size--;
+            return value;
+        }
+        
+        bool isEmpty() const {
+            return front == nullptr;
+        }
+        
+        int getSize() const {
+            return size;
+        }
+    };
+}
+
+// Тестирование пространств имен
+void testNamespaces() {
+    cout << "\n========== ТЕСТИРОВАНИЕ ПРОСТРАНСТВ ИМЕН ==========" << endl;
+    
+    // Тестирование MathUtils::Fraction
+    cout << "\n--- MathUtils::Fraction ---" << endl;
+    try {
+        MathUtils::Fraction f1(1, 2);
+        MathUtils::Fraction f2(1, 3);
+        MathUtils::Fraction f3 = f1 + f2;
+        MathUtils::Fraction f4 = f1 * f2;
+        MathUtils::Fraction f5 = f1 / f2;
+        
+        cout << "f1 = "; f1.display(); cout << endl;
+        cout << "f2 = "; f2.display(); cout << endl;
+        cout << "f1 + f2 = "; f3.display(); cout << endl;
+        cout << "f1 * f2 = "; f4.display(); cout << endl;
+        cout << "f1 / f2 = "; f5.display(); cout << endl;
+        cout << "f1 as double = " << f1.toDouble() << endl;
+    } catch (const exception& e) {
+        cerr << "Ошибка: " << e.what() << endl;
+    }
+    
+    // Тестирование MathUtils::Point2D
+    cout << "\n--- MathUtils::Point2D ---" << endl;
+    MathUtils::Point2D p1(0, 0);
+    MathUtils::Point2D p2(3, 4);
+    cout << "Точка p1: "; p1.display(); cout << endl;
+    cout << "Точка p2: "; p2.display(); cout << endl;
+    cout << "Расстояние между точками: " << p1.distanceTo(p2) << endl;
+    
+    // Тестирование MathUtils::Point3D
+    cout << "\n--- MathUtils::Point3D ---" << endl;
+    MathUtils::Point3D p3d1(1, 0, 0);
+    MathUtils::Point3D p3d2(0, 1, 0);
+    cout << "Точка A: "; p3d1.display(); cout << endl;
+    cout << "Точка B: "; p3d2.display(); cout << endl;
+    cout << "Скалярное произведение: " << p3d1.dotProduct(p3d2) << endl;
+    
+    MathUtils::Point3D cross = p3d1.crossProduct(p3d2);
+    cout << "Векторное произведение: "; cross.display(); cout << endl;
+    
+    // Тестирование ContainerUtils::Stack
+    cout << "\n--- ContainerUtils::Stack ---" << endl;
+    ContainerUtils::Stack<int> stack;
+    stack.push(10);
+    stack.push(20);
+    stack.push(30);
+    cout << "Верхний элемент стека: " << stack.peek() << endl;
+    cout << "Размер стека: " << stack.getSize() << endl;
+    
+    while (!stack.isEmpty()) {
+        cout << "Извлечено: " << stack.pop() << endl;
+    }
+    
+    // Тестирование ContainerUtils::Queue
+    cout << "\n--- ContainerUtils::Queue ---" << endl;
+    ContainerUtils::Queue<string> queue;
+    queue.enqueue("Первый");
+    queue.enqueue("Второй");
+    queue.enqueue("Третий");
+    
+    while (!queue.isEmpty()) {
+        cout << "Извлечено: " << queue.dequeue() << endl;
+    }
+    
+    // Демонстрация обработки исключений в контейнерах
+    cout << "\n--- Обработка исключений в контейнерах ---" << endl;
+    try {
+        ContainerUtils::Stack<double> emptyStack;
+        emptyStack.pop(); // Должно выбросить исключение
+    } catch (const ContainerEmptyException& e) {
+        cerr << "Поймано исключение: " << e.what() << endl;
     }
 }
 
 int main() {
-    // Задание 1: Справочник
-    runDirectory();
+    // Задание 1: Двусвязный список с исключениями
+    demonstrateDoubleLinkedListWithExceptions();
     
-    // Задание 2: Умные указатели
-    testSmartPointers();
+    // Задание 2: Иерархия классов-исключений
+    testExceptionHierarchy();
     
-    // Задание 3: Частотный словарь
-    runFrequencyDictionary();
+    // Задание 3: Пространства имен
+    testNamespaces();
     
     return 0;
 }
