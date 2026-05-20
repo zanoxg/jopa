@@ -1,538 +1,883 @@
 #include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <iomanip>
-#include <memory>
-#include <numeric>
-#include <set>
+#include <stdexcept>
 
 using namespace std;
 
-// Класс автомобиля
-class Car {
-private:
-    string name;
-    int year;
-    double engineVolume;
-    double price;
-
+// Шаблонный класс для узла стека
+template<typename T>
+class StackNode {
 public:
-    // Конструкторы
-    Car() : name(""), year(0), engineVolume(0.0), price(0.0) {}
+    T data;
+    StackNode* next;
     
-    Car(const string& n, int y, double ev, double p) 
-        : name(n), year(y), engineVolume(ev), price(p) {}
+    StackNode(const T& value) : data(value), next(nullptr) {}
+};
+
+// Шаблонный класс Стек
+template<typename T>
+class Stack {
+private:
+    StackNode<T>* top;      // Вершина стека
+    int currentSize;        // Текущий размер
+    int capacity;           // Вместимость
+    
+    void resize() {
+        capacity = capacity * 2;
+        cout << "Стек переполнен! Увеличение размера до " << capacity << endl;
+    }
+    
+public:
+    // Конструктор
+    Stack(int initialCapacity = 10) : top(nullptr), currentSize(0), capacity(initialCapacity) {}
     
     // Конструктор копирования
-    Car(const Car& other) 
-        : name(other.name), year(other.year), 
-          engineVolume(other.engineVolume), price(other.price) {}
-    
-    // Геттеры
-    string getName() const { return name; }
-    int getYear() const { return year; }
-    double getEngineVolume() const { return engineVolume; }
-    double getPrice() const { return price; }
-    
-    // Сеттеры
-    void setName(const string& n) { name = n; }
-    void setYear(int y) { year = y; }
-    void setEngineVolume(double ev) { engineVolume = ev; }
-    void setPrice(double p) { price = p; }
-    
-    // Перегрузка оператора вывода
-    friend ostream& operator<<(ostream& os, const Car& car) {
-        os << left << setw(25) << car.name 
-           << setw(10) << car.year 
-           << setw(12) << fixed << setprecision(1) << car.engineVolume
-           << setw(15) << fixed << setprecision(2) << car.price << " руб.";
-        return os;
-    }
-    
-    // Перегрузка оператора сравнения для поиска
-    bool operator==(const Car& other) const {
-        return name == other.name && year == other.year && 
-               engineVolume == other.engineVolume && price == other.price;
-    }
-};
-
-// Функторы для сравнения
-struct CompareByName {
-    bool operator()(const Car& a, const Car& b) const {
-        return a.getName() < b.getName();
-    }
-};
-
-struct CompareByYear {
-    bool operator()(const Car& a, const Car& b) const {
-        return a.getYear() < b.getYear();
-    }
-};
-
-struct CompareByEngineVolume {
-    bool operator()(const Car& a, const Car& b) const {
-        return a.getEngineVolume() < b.getEngineVolume();
-    }
-};
-
-struct CompareByPrice {
-    bool operator()(const Car& a, const Car& b) const {
-        return a.getPrice() < b.getPrice();
-    }
-};
-
-// Функторы для поиска
-struct FindByName {
-    string name;
-    FindByName(const string& n) : name(n) {}
-    
-    bool operator()(const Car& car) const {
-        return car.getName() == name;
-    }
-};
-
-struct FindByYear {
-    int year;
-    FindByYear(int y) : year(y) {}
-    
-    bool operator()(const Car& car) const {
-        return car.getYear() == year;
-    }
-};
-
-struct FindByEngineRange {
-    double minVolume;
-    double maxVolume;
-    
-    FindByEngineRange(double minVol, double maxVol) 
-        : minVolume(minVol), maxVolume(maxVol) {}
-    
-    bool operator()(const Car& car) const {
-        return car.getEngineVolume() >= minVolume && 
-               car.getEngineVolume() <= maxVolume;
-    }
-};
-
-struct FindByPriceRange {
-    double minPrice;
-    double maxPrice;
-    
-    FindByPriceRange(double minP, double maxP) 
-        : minPrice(minP), maxPrice(maxP) {}
-    
-    bool operator()(const Car& car) const {
-        return car.getPrice() >= minPrice && car.getPrice() <= maxPrice;
-    }
-};
-
-struct FindByYearRange {
-    int minYear;
-    int maxYear;
-    
-    FindByYearRange(int minY, int maxY) 
-        : minYear(minY), maxYear(maxY) {}
-    
-    bool operator()(const Car& car) const {
-        return car.getYear() >= minYear && car.getYear() <= maxYear;
-    }
-};
-
-// Функтор для отображения автомобиля
-struct DisplayCar {
-    void operator()(const Car& car) const {
-        cout << car << endl;
-    }
-};
-
-// Функтор для обновления цены
-struct UpdatePrice {
-    double percentage;
-    
-    UpdatePrice(double p) : percentage(p) {}
-    
-    void operator()(Car& car) const {
-        double newPrice = car.getPrice() * (1 + percentage / 100.0);
-        car.setPrice(newPrice);
-    }
-};
-
-// Класс автосалона
-class CarDealership {
-private:
-    vector<Car> cars;
-    
-public:
-    // Добавление автомобиля
-    void addCar(const Car& car) {
-        cars.push_back(car);
-        cout << "Автомобиль успешно добавлен!" << endl;
-    }
-    
-    // Добавление автомобиля (перемещение)
-    void addCar(Car&& car) {
-        cars.push_back(move(car));
-        cout << "Автомобиль успешно добавлен!" << endl;
-    }
-    
-    // Удаление автомобиля по индексу
-    bool removeCar(int index) {
-        if (index >= 0 && index < cars.size()) {
-            cars.erase(cars.begin() + index);
-            cout << "Автомобиль успешно удален!" << endl;
-            return true;
-        }
-        cout << "Ошибка: неверный индекс!" << endl;
-        return false;
-    }
-    
-    // Удаление автомобиля по имени
-    bool removeCarByName(const string& name) {
-        auto it = remove_if(cars.begin(), cars.end(), 
-                           [&name](const Car& car) { 
-                               return car.getName() == name; 
-                           });
+    Stack(const Stack& other) : top(nullptr), currentSize(0), capacity(other.capacity) {
+        Stack<T> temp;
+        StackNode<T>* current = other.top;
         
-        if (it != cars.end()) {
-            cars.erase(it, cars.end());
-            cout << "Все автомобили с именем \"" << name << "\" удалены!" << endl;
-            return true;
+        // Копируем элементы во временный стек (чтобы сохранить порядок)
+        while (current) {
+            temp.push(current->data);
+            current = current->next;
         }
-        cout << "Автомобиль с именем \"" << name << "\" не найден!" << endl;
-        return false;
+        
+        // Перекладываем обратно
+        while (!temp.isEmpty()) {
+            push(temp.pop());
+        }
     }
     
-    // Отображение всех автомобилей
-    void displayAll() const {
-        if (cars.empty()) {
-            cout << "Нет автомобилей в базе данных!" << endl;
+    // Деструктор
+    ~Stack() {
+        clear();
+    }
+    
+    // Оператор присваивания
+    Stack& operator=(const Stack& other) {
+        if (this != &other) {
+            clear();
+            capacity = other.capacity;
+            
+            Stack<T> temp;
+            StackNode<T>* current = other.top;
+            while (current) {
+                temp.push(current->data);
+                current = current->next;
+            }
+            
+            while (!temp.isEmpty()) {
+                push(temp.pop());
+            }
+        }
+        return *this;
+    }
+    
+    // Добавление элемента в стек
+    void push(const T& value) {
+        if (currentSize >= capacity) {
+            resize();
+        }
+        
+        StackNode<T>* newNode = new StackNode<T>(value);
+        newNode->next = top;
+        top = newNode;
+        currentSize++;
+        
+        cout << "Добавлен элемент: " << value << " (размер: " << currentSize << "/" << capacity << ")" << endl;
+    }
+    
+    // Удаление элемента из стека
+    T pop() {
+        if (isEmpty()) {
+            throw runtime_error("Стек пуст! Невозможно выполнить pop.");
+        }
+        
+        StackNode<T>* temp = top;
+        T value = temp->data;
+        top = top->next;
+        delete temp;
+        currentSize--;
+        
+        cout << "Удален элемент: " << value << " (размер: " << currentSize << "/" << capacity << ")" << endl;
+        return value;
+    }
+    
+    // Просмотр верхнего элемента
+    T peek() const {
+        if (isEmpty()) {
+            throw runtime_error("Стек пуст! Нет элементов для просмотра.");
+        }
+        return top->data;
+    }
+    
+    // Проверка на пустоту
+    bool isEmpty() const {
+        return top == nullptr;
+    }
+    
+    // Получение текущего размера
+    int size() const {
+        return currentSize;
+    }
+    
+    // Получение вместимости
+    int getCapacity() const {
+        return capacity;
+    }
+    
+    // Очистка стека
+    void clear() {
+        while (!isEmpty()) {
+            pop();
+        }
+    }
+    
+    // Отображение всех элементов
+    void display() const {
+        if (isEmpty()) {
+            cout << "Стек пуст." << endl;
             return;
         }
         
-        cout << "\n" << string(70, '=') << endl;
-        cout << left << setw(25) << "Марка и модель" 
-             << setw(10) << "Год" 
-             << setw(12) << "Объем двигателя" 
-             << setw(15) << "Цена" << endl;
-        cout << string(70, '-') << endl;
-        
-        for_each(cars.begin(), cars.end(), DisplayCar());
-        cout << string(70, '=') << endl;
-    }
-    
-    // Сортировка по различным параметрам
-    void sortByName() {
-        sort(cars.begin(), cars.end(), CompareByName());
-        cout << "Сортировка по названию выполнена!" << endl;
-        displayAll();
-    }
-    
-    void sortByYear() {
-        sort(cars.begin(), cars.end(), CompareByYear());
-        cout << "Сортировка по году выпуска выполнена!" << endl;
-        displayAll();
-    }
-    
-    void sortByEngineVolume() {
-        sort(cars.begin(), cars.end(), CompareByEngineVolume());
-        cout << "Сортировка по объему двигателя выполнена!" << endl;
-        displayAll();
-    }
-    
-    void sortByPrice() {
-        sort(cars.begin(), cars.end(), CompareByPrice());
-        cout << "Сортировка по цене выполнена!" << endl;
-        displayAll();
-    }
-    
-    // Поиск по различным параметрам
-    vector<Car> searchByName(const string& name) const {
-        vector<Car> result;
-        copy_if(cars.begin(), cars.end(), back_inserter(result), FindByName(name));
-        return result;
-    }
-    
-    vector<Car> searchByYear(int year) const {
-        vector<Car> result;
-        copy_if(cars.begin(), cars.end(), back_inserter(result), FindByYear(year));
-        return result;
-    }
-    
-    vector<Car> searchByEngineVolume(double minVol, double maxVol) const {
-        vector<Car> result;
-        copy_if(cars.begin(), cars.end(), back_inserter(result), 
-                FindByEngineRange(minVol, maxVol));
-        return result;
-    }
-    
-    vector<Car> searchByPrice(double minPrice, double maxPrice) const {
-        vector<Car> result;
-        copy_if(cars.begin(), cars.end(), back_inserter(result), 
-                FindByPriceRange(minPrice, maxPrice));
-        return result;
-    }
-    
-    vector<Car> searchByYearRange(int minYear, int maxYear) const {
-        vector<Car> result;
-        copy_if(cars.begin(), cars.end(), back_inserter(result), 
-                FindByYearRange(minYear, maxYear));
-        return result;
-    }
-    
-    // Универсальный поиск с использованием функтора
-    template<typename Predicate>
-    vector<Car> search(Predicate pred) const {
-        vector<Car> result;
-        copy_if(cars.begin(), cars.end(), back_inserter(result), pred);
-        return result;
-    }
-    
-    // Вывод результатов поиска
-    void displaySearchResults(const vector<Car>& results, const string& searchType) const {
-        if (results.empty()) {
-            cout << "По запросу \"" << searchType << "\" ничего не найдено!" << endl;
-            return;
+        cout << "Содержимое стека (сверху вниз): ";
+        StackNode<T>* current = top;
+        while (current) {
+            cout << current->data << " ";
+            current = current->next;
         }
-        
-        cout << "\nРезультаты поиска (" << results.size() << " записей):" << endl;
-        cout << string(70, '-') << endl;
-        cout << left << setw(25) << "Марка и модель" 
-             << setw(10) << "Год" 
-             << setw(12) << "Объем двигателя" 
-             << setw(15) << "Цена" << endl;
-        cout << string(70, '-') << endl;
-        
-        for_each(results.begin(), results.end(), DisplayCar());
+        cout << endl;
     }
     
-    // Обновление цен
-    void updatePrices(double percentage) {
-        for_each(cars.begin(), cars.end(), UpdatePrice(percentage));
-        cout << "Цены обновлены на " << percentage << "%!" << endl;
-        displayAll();
-    }
-    
-    // Получение статистики
-    void showStatistics() const {
-        if (cars.empty()) {
-            cout << "Нет данных для статистики!" << endl;
-            return;
-        }
-        
-        cout << "\n=== СТАТИСТИКА АВТОСАЛОНА ===" << endl;
-        cout << "Всего автомобилей: " << cars.size() << endl;
-        
-        // Средняя цена
-        double totalPrice = accumulate(cars.begin(), cars.end(), 0.0,
-            [](double sum, const Car& car) { return sum + car.getPrice(); });
-        double avgPrice = totalPrice / cars.size();
-        cout << "Средняя цена: " << fixed << setprecision(2) << avgPrice << " руб." << endl;
-        
-        // Диапазон цен
-        auto priceMinMax = minmax_element(cars.begin(), cars.end(), 
-            [](const Car& a, const Car& b) { return a.getPrice() < b.getPrice(); });
-        cout << "Минимальная цена: " << priceMinMax.first->getPrice() << " руб." << endl;
-        cout << "Максимальная цена: " << priceMinMax.second->getPrice() << " руб." << endl;
-        
-        // Диапазон годов выпуска
-        auto yearMinMax = minmax_element(cars.begin(), cars.end(),
-            [](const Car& a, const Car& b) { return a.getYear() < b.getYear(); });
-        cout << "Самый старый автомобиль: " << yearMinMax.first->getYear() << " год" << endl;
-        cout << "Самый новый автомобиль: " << yearMinMax.second->getYear() << " год" << endl;
-        
-        // Список уникальных марок
-        set<string> uniqueNames;
-        for_each(cars.begin(), cars.end(), 
-            [&uniqueNames](const Car& car) { uniqueNames.insert(car.getName()); });
-        
-        cout << "Количество уникальных марок: " << uniqueNames.size() << endl;
-    }
-    
-    // Сохранение в файл (для примера)
-    void saveToFile(const string& filename) const {
-        // Здесь можно реализовать сохранение в файл
-        cout << "Сохранение в файл \"" << filename << "\" (демонстрация)" << endl;
-    }
-    
-    // Загрузка из файла (для примера)
-    void loadFromFile(const string& filename) {
-        // Здесь можно реализовать загрузку из файла
-        cout << "Загрузка из файла \"" << filename << "\" (демонстрация)" << endl;
+    // Получение головы списка (для доступа к узлам)
+    StackNode<T>* getTop() const {
+        return top;
     }
 };
 
-// Функция для отображения меню
-void showMenu() {
-    cout << "\n" << string(50, '=') << endl;
-    cout << "        СИСТЕМА УПРАВЛЕНИЯ АВТОСАЛОНОМ" << endl;
-    cout << string(50, '=') << endl;
-    cout << "1. Добавить автомобиль" << endl;
-    cout << "2. Удалить автомобиль" << endl;
-    cout << "3. Показать все автомобили" << endl;
-    cout << "4. Сортировка по названию" << endl;
-    cout << "5. Сортировка по году выпуска" << endl;
-    cout << "6. Сортировка по объему двигателя" << endl;
-    cout << "7. Сортировка по цене" << endl;
-    cout << "8. Поиск по названию" << endl;
-    cout << "9. Поиск по году выпуска" << endl;
-    cout << "10. Поиск по диапазону объема двигателя" << endl;
-    cout << "11. Поиск по диапазону цены" << endl;
-    cout << "12. Поиск по диапазону годов выпуска" << endl;
-    cout << "13. Обновить цены (на процент)" << endl;
-    cout << "14. Показать статистику" << endl;
-    cout << "15. Очистить базу данных" << endl;
-    cout << "0. Выход" << endl;
-    cout << string(50, '-') << endl;
-    cout << "Выберите действие: ";
+// Демонстрация работы стека
+void demonstrateStack() {
+    cout << "\n========== ДЕМОНСТРАЦИЯ РАБОТЫ СТЕКА ==========" << endl;
+    
+    Stack<int> stack(3); // Создаем стек с начальной вместимостью 3
+    
+    cout << "\n--- Добавление элементов ---" << endl;
+    stack.push(10);
+    stack.push(20);
+    stack.push(30);
+    stack.display();
+    
+    cout << "\n--- Добавление элемента при переполнении ---" << endl;
+    stack.push(40); // Должен увеличить размер
+    
+    cout << "\n--- Просмотр верхнего элемента ---" << endl;
+    cout << "Верхний элемент: " << stack.peek() << endl;
+    
+    cout << "\n--- Удаление элементов ---" << endl;
+    while (!stack.isEmpty()) {
+        stack.pop();
+    }
+    
+    cout << "\n--- Проверка на пустоту ---" << endl;
+    cout << "Стек пуст? " << (stack.isEmpty() ? "Да" : "Нет") << endl;
 }
 
-// Функция для ввода данных автомобиля
-Car inputCar() {
-    string name;
-    int year;
-    double engineVolume;
-    double price;
+// Шаблонный класс узла списка
+template<typename T>
+class ListNode {
+public:
+    T data;
+    ListNode* next;
     
-    cin.ignore();
-    cout << "Введите название автомобиля: ";
-    getline(cin, name);
+    ListNode(const T& value) : data(value), next(nullptr) {}
+};
+
+// Шаблонный класс Односвязный список
+template<typename T>
+class LinkedList {
+protected:
+    ListNode<T>* head;
+    int listSize;
     
-    cout << "Введите год выпуска: ";
-    cin >> year;
+public:
+    // Конструктор
+    LinkedList() : head(nullptr), listSize(0) {}
     
-    cout << "Введите объем двигателя (л): ";
-    cin >> engineVolume;
+    // Конструктор копирования
+    LinkedList(const LinkedList& other) : head(nullptr), listSize(0) {
+        ListNode<T>* current = other.head;
+        while (current) {
+            pushBack(current->data);
+            current = current->next;
+        }
+    }
     
-    cout << "Введите цену (руб.): ";
-    cin >> price;
+    // Деструктор
+    virtual ~LinkedList() {
+        clear();
+    }
     
-    return Car(name, year, engineVolume, price);
+    // Оператор присваивания
+    LinkedList& operator=(const LinkedList& other) {
+        if (this != &other) {
+            clear();
+            ListNode<T>* current = other.head;
+            while (current) {
+                pushBack(current->data);
+                current = current->next;
+            }
+        }
+        return *this;
+    }
+    
+    // Добавление в начало
+    void pushFront(const T& value) {
+        ListNode<T>* newNode = new ListNode<T>(value);
+        newNode->next = head;
+        head = newNode;
+        listSize++;
+    }
+    
+    // Добавление в конец
+    void pushBack(const T& value) {
+        ListNode<T>* newNode = new ListNode<T>(value);
+        
+        if (!head) {
+            head = newNode;
+        } else {
+            ListNode<T>* current = head;
+            while (current->next) {
+                current = current->next;
+            }
+            current->next = newNode;
+        }
+        listSize++;
+    }
+    
+    // Удаление из начала
+    T popFront() {
+        if (!head) {
+            throw runtime_error("Список пуст!");
+        }
+        
+        ListNode<T>* temp = head;
+        T value = temp->data;
+        head = head->next;
+        delete temp;
+        listSize--;
+        return value;
+    }
+    
+    // Отображение списка
+    void display() const {
+        if (!head) {
+            cout << "Список пуст." << endl;
+            return;
+        }
+        
+        ListNode<T>* current = head;
+        while (current) {
+            cout << current->data << " ";
+            current = current->next;
+        }
+        cout << "(размер: " << listSize << ")" << endl;
+    }
+    
+    // Очистка списка
+    void clear() {
+        while (head) {
+            ListNode<T>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+        listSize = 0;
+    }
+    
+    // Получение размера
+    int size() const {
+        return listSize;
+    }
+    
+    // Проверка на пустоту
+    bool isEmpty() const {
+        return head == nullptr;
+    }
+    
+    // 1. Операция клонирования списка (возвращает адрес головы клонированного списка)
+    ListNode<T>* clone() const {
+        if (!head) return nullptr;
+        
+        ListNode<T>* newHead = nullptr;
+        ListNode<T>* newTail = nullptr;
+        ListNode<T>* current = head;
+        
+        while (current) {
+            ListNode<T>* newNode = new ListNode<T>(current->data);
+            if (!newHead) {
+                newHead = newNode;
+                newTail = newNode;
+            } else {
+                newTail->next = newNode;
+                newTail = newNode;
+            }
+            current = current->next;
+        }
+        
+        return newHead;
+    }
+    
+    // 2. Перегрузка оператора + (объединение списков)
+    LinkedList<T> operator+(const LinkedList<T>& other) const {
+        LinkedList<T> result;
+        
+        // Добавляем элементы первого списка
+        ListNode<T>* current = head;
+        while (current) {
+            result.pushBack(current->data);
+            current = current->next;
+        }
+        
+        // Добавляем элементы второго списка
+        current = other.head;
+        while (current) {
+            result.pushBack(current->data);
+            current = current->next;
+        }
+        
+        return result;
+    }
+    
+    // 3. Перегрузка оператора * (пересечение списков - общие элементы)
+    LinkedList<T> operator*(const LinkedList<T>& other) const {
+        LinkedList<T> result;
+        
+        ListNode<T>* current = head;
+        while (current) {
+            // Проверяем, есть ли текущий элемент во втором списке
+            ListNode<T>* search = other.head;
+            while (search) {
+                if (search->data == current->data) {
+                    // Проверяем, не добавлен ли уже этот элемент в результат
+                    bool alreadyExists = false;
+                    ListNode<T>* resultCurrent = result.head;
+                    while (resultCurrent) {
+                        if (resultCurrent->data == current->data) {
+                            alreadyExists = true;
+                            break;
+                        }
+                        resultCurrent = resultCurrent->next;
+                    }
+                    
+                    if (!alreadyExists) {
+                        result.pushBack(current->data);
+                    }
+                    break;
+                }
+                search = search->next;
+            }
+            current = current->next;
+        }
+        
+        return result;
+    }
+    
+    // Получение головы списка
+    ListNode<T>* getHead() const {
+        return head;
+    }
+    
+    // Поиск элемента
+    bool find(const T& value) const {
+        ListNode<T>* current = head;
+        while (current) {
+            if (current->data == value) {
+                return true;
+            }
+            current = current->next;
+        }
+        return false;
+    }
+};
+
+// Демонстрация работы односвязного списка с дополнительными операциями
+void demonstrateLinkedList() {
+    cout << "\n========== ДЕМОНСТРАЦИЯ ОДНОСВЯЗНОГО СПИСКА ==========" << endl;
+    
+    LinkedList<int> list1;
+    LinkedList<int> list2;
+    
+    // Заполняем первый список
+    cout << "\nПервый список: ";
+    list1.pushBack(1);
+    list1.pushBack(2);
+    list1.pushBack(3);
+    list1.pushBack(4);
+    list1.pushBack(5);
+    list1.display();
+    
+    // Заполняем второй список
+    cout << "Второй список: ";
+    list2.pushBack(4);
+    list2.pushBack(5);
+    list2.pushBack(6);
+    list2.pushBack(7);
+    list2.pushBack(8);
+    list2.display();
+    
+    // Тестируем клонирование
+    cout << "\n--- Клонирование первого списка ---" << endl;
+    ListNode<int>* clonedHead = list1.clone();
+    LinkedList<int> clonedList;
+    ListNode<int>* current = clonedHead;
+    while (current) {
+        clonedList.pushBack(current->data);
+        current = current->next;
+    }
+    cout << "Клонированный список: ";
+    clonedList.display();
+    
+    // Тестируем оператор +
+    cout << "\n--- Оператор + (объединение) ---" << endl;
+    LinkedList<int> unionList = list1 + list2;
+    cout << "Результат объединения: ";
+    unionList.display();
+    
+    // Тестируем оператор *
+    cout << "\n--- Оператор * (пересечение) ---" << endl;
+    LinkedList<int> intersectList = list1 * list2;
+    cout << "Результат пересечения: ";
+    intersectList.display();
+    
+    // Очищаем память клонированного списка
+    while (clonedHead) {
+        ListNode<int>* temp = clonedHead;
+        clonedHead = clonedHead->next;
+        delete temp;
+    }
+}
+
+// Шаблонный класс для узла двусвязного списка
+template<typename T>
+class DoubleListNode {
+public:
+    T data;
+    DoubleListNode* prev;
+    DoubleListNode* next;
+    
+    DoubleListNode(const T& value) : data(value), prev(nullptr), next(nullptr) {}
+};
+
+// Шаблонный класс Двусвязный список
+template<typename T>
+class DoubleLinkedList {
+protected:
+    DoubleListNode<T>* head;
+    DoubleListNode<T>* tail;
+    int listSize;
+    
+public:
+    // Конструктор
+    DoubleLinkedList() : head(nullptr), tail(nullptr), listSize(0) {}
+    
+    // Конструктор копирования
+    DoubleLinkedList(const DoubleLinkedList& other) : head(nullptr), tail(nullptr), listSize(0) {
+        DoubleListNode<T>* current = other.head;
+        while (current) {
+            pushBack(current->data);
+            current = current->next;
+        }
+    }
+    
+    // Деструктор
+    virtual ~DoubleLinkedList() {
+        clear();
+    }
+    
+    // Оператор присваивания
+    DoubleLinkedList& operator=(const DoubleLinkedList& other) {
+        if (this != &other) {
+            clear();
+            DoubleListNode<T>* current = other.head;
+            while (current) {
+                pushBack(current->data);
+                current = current->next;
+            }
+        }
+        return *this;
+    }
+    
+    // Добавление в начало
+    void pushFront(const T& value) {
+        DoubleListNode<T>* newNode = new DoubleListNode<T>(value);
+        
+        if (!head) {
+            head = tail = newNode;
+        } else {
+            newNode->next = head;
+            head->prev = newNode;
+            head = newNode;
+        }
+        listSize++;
+    }
+    
+    // Добавление в конец
+    void pushBack(const T& value) {
+        DoubleListNode<T>* newNode = new DoubleListNode<T>(value);
+        
+        if (!head) {
+            head = tail = newNode;
+        } else {
+            newNode->prev = tail;
+            tail->next = newNode;
+            tail = newNode;
+        }
+        listSize++;
+    }
+    
+    // Удаление из начала
+    T popFront() {
+        if (!head) {
+            throw runtime_error("Список пуст!");
+        }
+        
+        DoubleListNode<T>* temp = head;
+        T value = temp->data;
+        
+        if (head == tail) {
+            head = tail = nullptr;
+        } else {
+            head = head->next;
+            head->prev = nullptr;
+        }
+        
+        delete temp;
+        listSize--;
+        return value;
+    }
+    
+    // Удаление из конца
+    T popBack() {
+        if (!tail) {
+            throw runtime_error("Список пуст!");
+        }
+        
+        DoubleListNode<T>* temp = tail;
+        T value = temp->data;
+        
+        if (head == tail) {
+            head = tail = nullptr;
+        } else {
+            tail = tail->prev;
+            tail->next = nullptr;
+        }
+        
+        delete temp;
+        listSize--;
+        return value;
+    }
+    
+    // Просмотр первого элемента
+    T front() const {
+        if (!head) {
+            throw runtime_error("Список пуст!");
+        }
+        return head->data;
+    }
+    
+    // Просмотр последнего элемента
+    T back() const {
+        if (!tail) {
+            throw runtime_error("Список пуст!");
+        }
+        return tail->data;
+    }
+    
+    // Отображение списка (с начала)
+    void displayForward() const {
+        if (!head) {
+            cout << "Список пуст." << endl;
+            return;
+        }
+        
+        DoubleListNode<T>* current = head;
+        while (current) {
+            cout << current->data << " ";
+            current = current->next;
+        }
+        cout << "(размер: " << listSize << ")" << endl;
+    }
+    
+    // Отображение списка (с конца)
+    void displayBackward() const {
+        if (!tail) {
+            cout << "Список пуст." << endl;
+            return;
+        }
+        
+        DoubleListNode<T>* current = tail;
+        while (current) {
+            cout << current->data << " ";
+            current = current->prev;
+        }
+        cout << "(размер: " << listSize << ")" << endl;
+    }
+    
+    // Очистка списка
+    void clear() {
+        while (head) {
+            DoubleListNode<T>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+        tail = nullptr;
+        listSize = 0;
+    }
+    
+    // Получение размера
+    int size() const {
+        return listSize;
+    }
+    
+    // Проверка на пустоту
+    bool isEmpty() const {
+        return head == nullptr;
+    }
+    
+    // 1. Операция клонирования списка
+    DoubleListNode<T>* clone() const {
+        if (!head) return nullptr;
+        
+        DoubleListNode<T>* newHead = nullptr;
+        DoubleListNode<T>* newTail = nullptr;
+        DoubleListNode<T>* current = head;
+        
+        while (current) {
+            DoubleListNode<T>* newNode = new DoubleListNode<T>(current->data);
+            if (!newHead) {
+                newHead = newNode;
+                newTail = newNode;
+            } else {
+                newTail->next = newNode;
+                newNode->prev = newTail;
+                newTail = newNode;
+            }
+            current = current->next;
+        }
+        
+        return newHead;
+    }
+    
+    // 2. Перегрузка оператора + (объединение списков)
+    DoubleLinkedList<T> operator+(const DoubleLinkedList<T>& other) const {
+        DoubleLinkedList<T> result;
+        
+        // Добавляем элементы первого списка
+        DoubleListNode<T>* current = head;
+        while (current) {
+            result.pushBack(current->data);
+            current = current->next;
+        }
+        
+        // Добавляем элементы второго списка
+        current = other.head;
+        while (current) {
+            result.pushBack(current->data);
+            current = current->next;
+        }
+        
+        return result;
+    }
+    
+    // 3. Перегрузка оператора * (пересечение списков)
+    DoubleLinkedList<T> operator*(const DoubleLinkedList<T>& other) const {
+        DoubleLinkedList<T> result;
+        
+        DoubleListNode<T>* current = head;
+        while (current) {
+            // Проверяем, есть ли текущий элемент во втором списке
+            DoubleListNode<T>* search = other.head;
+            while (search) {
+                if (search->data == current->data) {
+                    // Проверяем, не добавлен ли уже этот элемент в результат
+                    bool alreadyExists = false;
+                    DoubleListNode<T>* resultCurrent = result.head;
+                    while (resultCurrent) {
+                        if (resultCurrent->data == current->data) {
+                            alreadyExists = true;
+                            break;
+                        }
+                        resultCurrent = resultCurrent->next;
+                    }
+                    
+                    if (!alreadyExists) {
+                        result.pushBack(current->data);
+                    }
+                    break;
+                }
+                search = search->next;
+            }
+            current = current->next;
+        }
+        
+        return result;
+    }
+    
+    // Получение головы и хвоста
+    DoubleListNode<T>* getHead() const { return head; }
+    DoubleListNode<T>* getTail() const { return tail; }
+};
+
+// Шаблонный класс Очередь на основе двусвязного списка
+template<typename T>
+class Queue : private DoubleLinkedList<T> {
+public:
+    // Конструктор
+    Queue() : DoubleLinkedList<T>() {}
+    
+    // Добавление в очередь
+    void enqueue(const T& value) {
+        this->pushBack(value);
+        cout << "Добавлен в очередь: " << value << " (размер: " << this->size() << ")" << endl;
+    }
+    
+    // Удаление из очереди
+    T dequeue() {
+        if (this->isEmpty()) {
+            throw runtime_error("Очередь пуста! Невозможно выполнить dequeue.");
+        }
+        T value = this->popFront();
+        cout << "Удален из очереди: " << value << " (размер: " << this->size() << ")" << endl;
+        return value;
+    }
+    
+    // Просмотр первого элемента
+    T front() const {
+        return this->front();
+    }
+    
+    // Просмотр последнего элемента
+    T back() const {
+        return this->back();
+    }
+    
+    // Проверка на пустоту
+    bool isEmpty() const {
+        return this->isEmpty();
+    }
+    
+    // Получение размера
+    int size() const {
+        return this->size();
+    }
+    
+    // Очистка очереди
+    void clear() {
+        this->clear();
+    }
+    
+    // Отображение очереди
+    void display() const {
+        cout << "Содержимое очереди (с начала): ";
+        this->displayForward();
+    }
+};
+
+// Демонстрация работы очереди
+void demonstrateQueue() {
+    cout << "\n========== ДЕМОНСТРАЦИЯ РАБОТЫ ОЧЕРЕДИ ==========" << endl;
+    
+    Queue<int> queue;
+    
+    cout << "\n--- Добавление элементов в очередь ---" << endl;
+    queue.enqueue(10);
+    queue.enqueue(20);
+    queue.enqueue(30);
+    queue.display();
+    
+    cout << "\n--- Просмотр элементов ---" << endl;
+    cout << "Первый элемент: " << queue.front() << endl;
+    cout << "Последний элемент: " << queue.back() << endl;
+    
+    cout << "\n--- Удаление элементов из очереди ---" << endl;
+    while (!queue.isEmpty()) {
+        queue.dequeue();
+    }
+    
+    cout << "\n--- Проверка на пустоту ---" << endl;
+    cout << "Очередь пуста? " << (queue.isEmpty() ? "Да" : "Нет") << endl;
+}
+
+// Демонстрация работы двусвязного списка с дополнительными операциями
+void demonstrateDoubleLinkedList() {
+    cout << "\n========== ДЕМОНСТРАЦИЯ ДВУСВЯЗНОГО СПИСКА ==========" << endl;
+    
+    DoubleLinkedList<int> list1;
+    DoubleLinkedList<int> list2;
+    
+    // Заполняем первый список
+    cout << "\nПервый список (с начала): ";
+    list1.pushBack(1);
+    list1.pushBack(2);
+    list1.pushBack(3);
+    list1.pushBack(4);
+    list1.pushBack(5);
+    list1.displayForward();
+    
+    cout << "Первый список (с конца): ";
+    list1.displayBackward();
+    
+    // Заполняем второй список
+    cout << "Второй список: ";
+    list2.pushBack(4);
+    list2.pushBack(5);
+    list2.pushBack(6);
+    list2.pushBack(7);
+    list2.pushBack(8);
+    list2.displayForward();
+    
+    // Тестируем клонирование
+    cout << "\n--- Клонирование первого списка ---" << endl;
+    DoubleListNode<int>* clonedHead = list1.clone();
+    DoubleLinkedList<int> clonedList;
+    DoubleListNode<int>* current = clonedHead;
+    while (current) {
+        clonedList.pushBack(current->data);
+        current = current->next;
+    }
+    cout << "Клонированный список: ";
+    clonedList.displayForward();
+    
+    // Тестируем оператор +
+    cout << "\n--- Оператор + (объединение) ---" << endl;
+    DoubleLinkedList<int> unionList = list1 + list2;
+    cout << "Результат объединения: ";
+    unionList.displayForward();
+    
+    // Тестируем оператор *
+    cout << "\n--- Оператор * (пересечение) ---" << endl;
+    DoubleLinkedList<int> intersectList = list1 * list2;
+    cout << "Результат пересечения: ";
+    intersectList.displayForward();
+    
+    // Очищаем память клонированного списка
+    while (clonedHead) {
+        DoubleListNode<int>* temp = clonedHead;
+        clonedHead = clonedHead->next;
+        delete temp;
+    }
 }
 
 int main() {
-    CarDealership dealership;
-    int choice;
+    // Демонстрация стека
+    demonstrateStack();
     
-    // Добавляем несколько тестовых автомобилей
-    dealership.addCar(Car("Toyota Camry", 2022, 2.5, 3500000));
-    dealership.addCar(Car("BMW X5", 2023, 3.0, 6500000));
-    dealership.addCar(Car("Mercedes-Benz E-Class", 2021, 2.0, 4500000));
-    dealership.addCar(Car("Honda Civic", 2022, 1.8, 2200000));
-    dealership.addCar(Car("Kia Sportage", 2023, 2.0, 2800000));
-    dealership.addCar(Car("Hyundai Tucson", 2021, 2.0, 2600000));
-    dealership.addCar(Car("Nissan Qashqai", 2022, 1.6, 2300000));
-    dealership.addCar(Car("Volkswagen Tiguan", 2023, 2.0, 3000000));
+    // Демонстрация односвязного списка
+    demonstrateLinkedList();
     
-    do {
-        showMenu();
-        cin >> choice;
-        
-        switch (choice) {
-            case 1: {
-                Car car = inputCar();
-                dealership.addCar(move(car));
-                break;
-            }
-            case 2: {
-                int index;
-                cout << "Введите индекс автомобиля для удаления: ";
-                cin >> index;
-                dealership.removeCar(index);
-                break;
-            }
-            case 3:
-                dealership.displayAll();
-                break;
-            case 4:
-                dealership.sortByName();
-                break;
-            case 5:
-                dealership.sortByYear();
-                break;
-            case 6:
-                dealership.sortByEngineVolume();
-                break;
-            case 7:
-                dealership.sortByPrice();
-                break;
-            case 8: {
-                string name;
-                cin.ignore();
-                cout << "Введите название: ";
-                getline(cin, name);
-                vector<Car> results = dealership.searchByName(name);
-                dealership.displaySearchResults(results, "по названию: " + name);
-                break;
-            }
-            case 9: {
-                int year;
-                cout << "Введите год выпуска: ";
-                cin >> year;
-                vector<Car> results = dealership.searchByYear(year);
-                dealership.displaySearchResults(results, "по году: " + to_string(year));
-                break;
-            }
-            case 10: {
-                double minVol, maxVol;
-                cout << "Введите минимальный объем двигателя: ";
-                cin >> minVol;
-                cout << "Введите максимальный объем двигателя: ";
-                cin >> maxVol;
-                vector<Car> results = dealership.searchByEngineVolume(minVol, maxVol);
-                dealership.displaySearchResults(results, "по объему двигателя от " + 
-                                                to_string(minVol) + " до " + to_string(maxVol));
-                break;
-            }
-            case 11: {
-                double minPrice, maxPrice;
-                cout << "Введите минимальную цену: ";
-                cin >> minPrice;
-                cout << "Введите максимальную цену: ";
-                cin >> maxPrice;
-                vector<Car> results = dealership.searchByPrice(minPrice, maxPrice);
-                dealership.displaySearchResults(results, "по цене от " + 
-                                                to_string(minPrice) + " до " + to_string(maxPrice));
-                break;
-            }
-            case 12: {
-                int minYear, maxYear;
-                cout << "Введите минимальный год: ";
-                cin >> minYear;
-                cout << "Введите максимальный год: ";
-                cin >> maxYear;
-                vector<Car> results = dealership.searchByYearRange(minYear, maxYear);
-                dealership.displaySearchResults(results, "по году от " + 
-                                                to_string(minYear) + " до " + to_string(maxYear));
-                break;
-            }
-            case 13: {
-                double percentage;
-                cout << "Введите процент изменения цены (положительный - увеличение, отрицательный - уменьшение): ";
-                cin >> percentage;
-                dealership.updatePrices(percentage);
-                break;
-            }
-            case 14:
-                dealership.showStatistics();
-                break;
-            case 15: {
-                char confirm;
-                cout << "Вы уверены, что хотите очистить базу данных? (y/n): ";
-                cin >> confirm;
-                if (confirm == 'y' || confirm == 'Y') {
-                    // Создаем новый объект вместо очистки
-                    dealership = CarDealership();
-                    cout << "База данных очищена!" << endl;
-                }
-                break;
-            }
-            case 0:
-                cout << "До свидания!" << endl;
-                break;
-            default:
-                cout << "Неверный выбор! Попробуйте снова." << endl;
-        }
-    } while (choice != 0);
+    // Демонстрация очереди (на основе двусвязного списка)
+    demonstrateQueue();
+    
+    // Демонстрация двусвязного списка
+    demonstrateDoubleLinkedList();
     
     return 0;
 }
